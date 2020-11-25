@@ -1,7 +1,4 @@
 require(tidyverse)
-require(maps)
-require(mapdata)
-require(ggplot2)
 
 dir1 = "/Users/Yuki/Dropbox/same"
 
