@@ -99,8 +99,8 @@ th = theme(panel.grid.major = element_blank(),
            axis.title.x = element_text(size = rel(1.5)),
            axis.title.y = element_text(size = rel(1.5)),
            legend.title = element_text(size = 13))
-p = geom_point(data = same, aes(x = lon, y = lat, colour = kg), shape = 16, size = 1)
-# f = facet_wrap( ~ Category, ncol = ncol)
+p = geom_point(data = same , aes(x = lon, y = lat, colour = kg), shape = 16, size = 1)
+# p = geom_point(data = same %>% filter(kg > 10000), aes(x = lon, y = lat, colour = kg), shape = 16, size = 1)
 c = scale_colour_gradientn(colours = c("black", "blue", "cyan", "green", "yellow", "orange", "red", "darkred"))
 labs = labs(x = "Longitude", y = "Latitude", colour = "kg")
 
