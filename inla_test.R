@@ -124,6 +124,9 @@ table(rowSums(A > 0))
 table(rowSums(A))
 table(colSums(A) > 0)
 
+plot(mesh)
+points(loc, col = "green", pch = 15, cex = 1)
+
 # for prediction ------------------------------------------------
 # Select region 
 map <- map("world", "Japan", fill = TRUE,
