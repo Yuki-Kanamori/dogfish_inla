@@ -117,3 +117,4 @@ for(i in 1:12){
   write.csv(data, paste0(file_name, ".csv"), fileEncoding = "CP932")
 }
 
+m1 = same %>% filter(month == 1)
