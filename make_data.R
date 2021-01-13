@@ -106,3 +106,14 @@ labs = labs(x = "Longitude", y = "Latitude", colour = "kg")
 
 fig = local_map+theme_bw()+th+p+c+labs
 ggsave(filename = "map_same.pdf", plot = fig, units = "in", width = 11.69, height = 8.27)
+
+
+
+# save data -----------------------------------------------------
+for(i in 1:12){
+  data = same %>% filter(month == i)
+  setwd(dir1)
+  file_name = paste0("same", i)
+  write.csv(data, paste0(file_name, ".csv"), fileEncoding = "CP932")
+}
+
