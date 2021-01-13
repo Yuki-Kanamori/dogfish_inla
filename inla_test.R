@@ -33,7 +33,7 @@ map <- map("world", "Japan", fill = TRUE,
 IDs <- sapply(strsplit(map$names, ":"), function(x) x[1])
 map.sp <- map2SpatialPolygons(
   map, IDs = IDs,
-  proj4string = CRS("+proj=longlat +datum=WGS84"))
+  proj4string = CRS("+proj=longlat +datum=WGS84")) #緯度経度データ
 summary(map.sp)
 
 
@@ -45,8 +45,10 @@ summary(map.sp)
 pl.sel <- SpatialPolygons(list(Polygons(list(Polygon(
   cbind(c(129, 133, 138, 144, 144, 144), # x-axis 
         c(34,  39,  41,  42,  38,  34)), # y-axis
-  FALSE)), '0')), proj4string = CRS(proj4string(map.sp)))
-poly.water <- gDifference(pl.sel, map.sp)
+  FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
+summary(pl.sel)
+poly.water <- gDifference(pl.sel, map.sp) #緯度経度
+summary(poly.water)
 plot(pl.sel)
 plot(map.sp)
 plot(poly.water)
@@ -54,15 +56,19 @@ plot(poly.water)
 
 # ------------------------------------------------------------------------
 # Define UTM projection
-kmproj <- CRS("+proj=utm +zone=53 ellps=WGS84 +units=km")
-# Project data
-poly.water = spTransform(poly.water, kmproj)
-pl.sel = spTransform(pl.sel, kmproj)
-map.sp = spTransform(map.sp, kmproj)
+# ここでUTMに変換しており，緯度経度でなくなっている
+# kmproj <- CRS("+proj=utm +zone=53 ellps=WGS84 +units=km")
+# # Project data
+# poly.water = spTransform(poly.water, kmproj)
+# pl.sel = spTransform(pl.sel, kmproj)
+# map.sp = spTransform(map.sp, kmproj)
 
 ## ------------------------------------------------------------------------
-mesh.not <- inla.mesh.2d(boundary = poly.water, max.edge = 30,
-                         cutoff = 2)
+mesh.not <- inla.mesh.2d(boundary = poly.water, max.edge = 0.5,
+                         cutoff = 0.2)
+plot(mesh.not)
+summary(mesh.not) #緯度経度
+
 
 ## ----label = "plot-barr-mesh1", fig = TRUE, echo = FALSE, fig.align = "center", fig.width = 10, heigh = 4.5, width = '97%', fig.cap = "The left plot shows the polygon for land in grey and the manually constructed polygon for our study area in light blue. The right plot shows the simple mesh, constructed only in the water."----
 par(mfrow = c(1, 2), mar = c(3, 3, 0.5, 0.5), mgp = c(2, 0.7, 0), las = 1)
@@ -73,7 +79,7 @@ plot(map.sp, add = TRUE, col = alpha(gray(0.9), 0.5))
 
 plot(pl.sel, asp = 1)
 plot(map.sp, add = TRUE, col = gray(0.9))
-plot(mesh.not, add = TRUE)
+plot(mesh.not, add = TRUE) #ここが変！
 
 ## ------------------------------------------------------------------------
 max.edge = 30
