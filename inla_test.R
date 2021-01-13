@@ -79,7 +79,7 @@ plot(map.sp, add = TRUE, col = alpha(gray(0.9), 0.5))
 
 plot(pl.sel, asp = 1)
 plot(map.sp, add = TRUE, col = gray(0.9))
-plot(mesh.not, add = TRUE) #ここが変！
+plot(mesh.not, add = TRUE) #ここが変！=>修正済
 
 ## ------------------------------------------------------------------------
 max.edge = 30
