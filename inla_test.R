@@ -43,7 +43,7 @@ summary(map.sp)
 #         c(35,  39,  42,  42,  38,  36.2)), # y-axis
 #   FALSE)), '0')), proj4string = CRS(proj4string(map.sp)))
 pl.sel <- SpatialPolygons(list(Polygons(list(Polygon(
-  cbind(c(129, 133, 138, 144, 144, 144), # x-axis 
+  cbind(c(128, 132, 138, 144, 144, 144), # x-axis 
         c(34,  39,  41,  42,  38,  34)), # y-axis
   FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
 summary(pl.sel)
@@ -131,13 +131,13 @@ loc = as.matrix(cbind(m1$lon, m1$lat))
 
 # projector matrix
 A = inla.spde.make.A(mesh, loc = loc)
-dim(A) # 185229, 2859
+dim(A) # 185229, 1577
 table(rowSums(A > 0)) #3が185229
 table(rowSums(A)) #1が185229
-table(colSums(A) > 0) #FALSEが1099 TRUEが360
+table(colSums(A) > 0) #FALSEが1213 TRUEが364
 
 plot(mesh)
-points(loc, col = "green", pch = 15, cex = 1)
+points(loc, col = "green", pch = 15, cex = 0.5)
 
 # for prediction ------------------------------------------------
 # Select region 
@@ -151,9 +151,9 @@ summary(map.sp)
 
 
 pl.sel2 <- SpatialPolygons(list(Polygons(list(Polygon(
-  cbind(c(129, 133, 138, 150, 150, 150), # x-axis 
+  cbind(c(128, 132, 138, 144, 144, 144), # x-axis 
         c(34,  39,  41,  42,  38,  34)), # y-axis
-  FALSE)), '0')), proj4string = CRS(proj4string(map.sp)))
+  FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
 summary(pl.sel2)
 poly.water2 <- gDifference(pl.sel2, map.sp)
 plot(pl.sel2)
