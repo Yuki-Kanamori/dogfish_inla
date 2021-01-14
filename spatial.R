@@ -12,6 +12,10 @@ m1 = read.csv('same1.csv')
 summary(m1)
 m1 = m1 %>% mutate(pa = ifelse(kg > 0, 1, 0)) %>% select(year, lon, lat, pa)
 
+# 予備解析のためデータを小さくする
+m1 = m1 %>% filter(year < 1982)
+summary(m1)
+catch = (m1$kg > 0) + 0 #バイナリーデータに変換
 
 
 # ---------------------------------------------------------------
@@ -124,13 +128,14 @@ loc = as.matrix(cbind(m1$lon, m1$lat))
 
 # projector matrix
 A = inla.spde.make.A(mesh, loc = loc)
-dim(A) # 185229, 1738
-table(rowSums(A > 0)) #3が185229
-table(rowSums(A)) #1が185229
-table(colSums(A) > 0) #FALSEが1368 TRUEが370
+dim(A) 
+table(rowSums(A > 0)) 
+table(rowSums(A)) 
+table(colSums(A) > 0) 
 
 plot(mesh)
 points(loc, col = "red", pch = 16, cex = 0.5)
+
 
 
 # ---------------------------------------------------------------
@@ -174,26 +179,32 @@ plot(coop, asp = 1)
 Ap = inla.spde.make.A(mesh = mesh, loc = coop)
 dim(Ap) #1518, 1738
 
-A.pred = inla.spde.make.A(mesh, mesh$loc[, 1:2])
+
 
 
 # ---------------------------------------------------------------
 # stack ---------------------------------------------------------
 # ---------------------------------------------------------------
 stk = inla.stack(
-  data = list(y = m1$pa),
+  data = list(y = catch),
   A = list(A, 1),
   effects = list(s = 1:mesh$n, intercept = rep(1, nrow(m1))),
   tag = 'est'
 )
 
+na = rep(NA, nrow(coop))
+# stk.pred = inla.stack(
+#   data = list(y = NA),
+#   A = list(A.pred, 1),
+#   effects = list(s = 1:mesh$n, intercept = rep(1, nrow(A.pred))),
+#   tag = 'pred'
+# )
 stk.pred = inla.stack(
-  data = list(y = NA),
-  A = list(A.pred, 1),
-  effects = list(s = 1:mesh$n, intercept = rep(1, nrow(A.pred))),
+  data = list(y = na),
+  A = list(Ap, 1),
+  effects = list(s = 1:mesh$n, intercept = rep(1, nrow(coop))),
   tag = 'pred'
 )
-
 joint.stk = inla.stack(stk, stk.pred)
 
 
@@ -211,4 +222,53 @@ res = inla(form.barrier, data = inla.stack.data(joint.stk),
                     family = 'binomial', 
                     control.inla = list(int.strategy = "eb"),
                     control.compute = list(waic = TRUE, dic = TRUE))
+res$waic$waic; res$dic$dic #28158, 28166
+summary(res)
+
+
+# plot the fitted values on a map -------------------------------
+best_kono = res
+
+index_cp = inla.stack.index(joint.stk, tag = "est")$data
+
+pred_mean_c = best_kono$summary.fitted.values[index_cp, "mean"]
+pred_ll_c = best_kono$summary.fitted.values[index_cp, "0.025quant"]
+pred_ul_c = best_kono$summary.fitted.values[index_cp, "0.975quant"]
+
+dpm_c = rbind(data.frame(east = coop[, 1], north = coop[, 2],
+                         value = pred_mean_c, variable = "pred_mean_catch"),
+              data.frame(east = coop[, 1], north = coop[, 2],
+                         value = pred_ll_c, variable = "pred_ll_catch"),
+              data.frame(east = coop[, 1], north = coop[, 2],
+                         value = pred_ul_c, variable = "pred_ul_catch"))
+
+dpm_c$variable = as.factor(dpm_c$variable)
+
+g2 = ggplot(data = dpm_c, aes(east, north, fill = value))
+t = geom_tile()
+f = facet_wrap(~ variable)
+c = coord_fixed(ratio = 1)
+s = scale_fill_gradient(name = "encounter prob. (logit)", low = "blue", high = "orange")
+g2+t+f+c+s+theme_bw()
+
+
+# with map
+world_map <- map_data("world")
+jap <- subset(world_map, world_map$region == "Japan")
+jap_cog <- jap[jap$lat > 35 & jap$lat < 38 & jap$long > 139 & jap$long < 141, ]
+pol = geom_polygon(data = jap_cog, aes(x=long, y=lat, group=group), colour="gray 50", fill="gray 50")
+c_map = coord_map(xlim = c(139.5, 140.3), ylim = c(35, 35.75))
+
+dpm = rbind(dpm_e, dpm_c)
+m_dpm = dpm %>% filter(str_detect(variable, "mean"))
+unique(m_dpm$variable)
+
+g = ggplot(data = m_dpm, aes(east, north, fill = value))
+t = geom_tile()
+f = facet_wrap(~ variable)
+c = coord_fixed(ratio = 1)
+s = scale_fill_gradient(name = "encounter prob. (logit)", low = "blue", high = "orange")
+g+t+f+c+s+pol+c_map+theme_bw()+labs(title = "konosiro")
+
+
 
