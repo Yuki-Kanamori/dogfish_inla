@@ -72,7 +72,7 @@ summary(mesh.not) #緯度経度
 
 
 ## ----label = "plot-barr-mesh1", fig = TRUE, echo = FALSE, fig.align = "center", fig.width = 10, heigh = 4.5, width = '97%', fig.cap = "The left plot shows the polygon for land in grey and the manually constructed polygon for our study area in light blue. The right plot shows the simple mesh, constructed only in the water."----
-par(mfrow = c(1, 2), mar = c(3, 3, 0.5, 0.5), mgp = c(2, 0.7, 0), las = 1)
+par(mfrow = c(1, 1), mar = c(3, 3, 0.5, 0.5), mgp = c(2, 0.7, 0), las = 1)
 par(mar = c(0, 0, 0, 0))
 
 plot(pl.sel, col = alpha("skyblue", 0.5), asp = 1)
@@ -262,14 +262,14 @@ c_map = coord_map(xlim = c(127, 145), ylim = c(33, 43))
 m_dpm = dpm_c %>% filter(str_detect(variable, "mean"))
 unique(m_dpm$variable)
 
-g = ggplot(data = m_dpm, aes(east, north, fill = value))
-t = geom_tile()
-f = facet_wrap(~ variable)
-c = coord_fixed(ratio = 1)
-s = scale_fill_gradient(name = "encounter prob. (logit)", low = "blue", high = "orange")
-g+t+f+c+s+pol+c_map+theme_bw()+labs(x = "", y = "", title = "Jan. 1972-1981", colour = "Logit (encounter prob.)")
-
-g = ggplot(data = m_dpm, aes(east, north, colour = value))
+# g = ggplot(data = m_dpm, aes(east, north, fill = value))
+# t = geom_tile()
+# f = facet_wrap(~ variable)
+# c = coord_fixed(ratio = 1)
+# s = scale_fill_gradient(name = "encounter prob. (logit)", low = "blue", high = "orange")
+# g+t+f+c+s+pol+c_map+theme_bw()+labs(x = "", y = "", title = "Jan. 1972-1981", colour = "Logit (encounter prob.)")
+# 
+# g = ggplot(data = m_dpm, aes(east, north, colour = value))
 p = geom_point()
 g+p+pol+theme_bw()+labs(x = "", y = "", title = "Jan. 1972-1981", colour = "Logit\n (encounter prob.)") + scale_colour_gradientn(colours = c("black", "blue", "cyan", "green", "yellow", "orange", "red", "darkred"))
 
