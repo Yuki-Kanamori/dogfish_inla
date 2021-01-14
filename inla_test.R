@@ -82,18 +82,24 @@ plot(map.sp, add = TRUE, col = gray(0.9))
 plot(mesh.not, add = TRUE) #ここが変！=>修正済
 
 ## ------------------------------------------------------------------------
-max.edge = 30
-bound.outer = 80
+# max.edge = 30
+# bound.outer = 80
+# mesh <- inla.mesh.2d(boundary = poly.water,
+#                      max.edge = c(1, 5) * max.edge,
+#                      cutoff = 1,
+#                      offset = c(max.edge, bound.outer))
 mesh <- inla.mesh.2d(boundary = poly.water,
-                     max.edge = c(1, 5) * max.edge,
-                     cutoff = 1,
-                     offset = c(max.edge, bound.outer))
+                     max.edge = 0.5,
+                     cutoff = 0.2,
+                     offset = c(1, 1))
 plot(mesh)
 
 
 ## ------------------------------------------------------------------------
 water.tri = inla.over_sp_mesh(poly.water, y = mesh, 
                               type = "centroid", ignore.CRS = TRUE)
+# ignore.CRS: whether to ignore the coordinate system information in x and y (default FALSE)
+summary(water.tri)
 num.tri = length(mesh$graph$tv[, 1])
 barrier.tri = setdiff(1:num.tri, water.tri)
 poly.barrier = inla.barrier.polygon(mesh, 
@@ -126,9 +132,9 @@ loc = as.matrix(cbind(m1$lon, m1$lat))
 # projector matrix
 A = inla.spde.make.A(mesh, loc = loc)
 dim(A) # 185229, 2859
-table(rowSums(A > 0))
-table(rowSums(A))
-table(colSums(A) > 0)
+table(rowSums(A > 0)) #3が185229
+table(rowSums(A)) #1が185229
+table(colSums(A) > 0) #FALSEが1099 TRUEが360
 
 plot(mesh)
 points(loc, col = "green", pch = 15, cex = 1)
