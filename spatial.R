@@ -10,7 +10,7 @@ setwd(dir1)
 
 m1 = read.csv('same1.csv')
 summary(m1)
-m1 = m1 %>% mutate(pa = ifelse(kg > 0, 1, 0)) %>% select(year, lon, lat, pa)
+m1 = m1 %>% select(year, lon, lat, kg)
 
 # 予備解析のためデータを小さくする
 m1 = m1 %>% filter(year < 1982)
@@ -188,7 +188,7 @@ dim(Ap) #1518, 1738
 stk = inla.stack(
   data = list(y = catch),
   A = list(A, 1),
-  effects = list(s = 1:mesh$n, intercept = rep(1, nrow(m1))),
+  effects = list(s = 1:mesh$n, intercept = rep(1, nrow(catch))),
   tag = 'est'
 )
 
