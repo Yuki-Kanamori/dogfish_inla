@@ -44,7 +44,7 @@ summary(map.sp)
 #   FALSE)), '0')), proj4string = CRS(proj4string(map.sp)))
 pl.sel <- SpatialPolygons(list(Polygons(list(Polygon(
   cbind(c(128, 132, 138, 144, 144, 144), # x-axis 
-        c(34,  39,  41,  42,  38,  34)), # y-axis
+        c(34,  39,  43,  43,  38,  34)), # y-axis
   FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
 summary(pl.sel)
 poly.water <- gDifference(pl.sel, map.sp) #緯度経度
@@ -131,13 +131,13 @@ loc = as.matrix(cbind(m1$lon, m1$lat))
 
 # projector matrix
 A = inla.spde.make.A(mesh, loc = loc)
-dim(A) # 185229, 1577
+dim(A) # 185229, 1738
 table(rowSums(A > 0)) #3が185229
 table(rowSums(A)) #1が185229
-table(colSums(A) > 0) #FALSEが1213 TRUEが364
+table(colSums(A) > 0) #FALSEが1368 TRUEが370
 
 plot(mesh)
-points(loc, col = "green", pch = 15, cex = 0.5)
+points(loc, col = "red", pch = 16, cex = 0.5)
 
 # for prediction ------------------------------------------------
 # Select region 
@@ -152,7 +152,7 @@ summary(map.sp)
 
 pl.sel2 <- SpatialPolygons(list(Polygons(list(Polygon(
   cbind(c(128, 132, 138, 144, 144, 144), # x-axis 
-        c(34,  39,  41,  42,  38,  34)), # y-axis
+        c(34,  39,  43,  43,  38,  34)), # y-axis
   FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
 summary(pl.sel2)
 poly.water2 <- gDifference(pl.sel2, map.sp)
@@ -162,12 +162,12 @@ plot(poly.water2)
 summary(poly.water2) #xmax = 144
 
 tok_bor = poly.water2@polygons[[1]]@Polygons[[1]]@coords
-summary(tok_bor) #xmax = 141
+summary(tok_bor) #xmax = 141 ここが変！=>直った？
 
 bb_tok = poly.water@bbox
 summary(bb_tok)
-x = seq(bb_tok[1, "min"] - 5, bb_tok[1, "max"] + 5, length.out = 80)
-y = seq(bb_tok[2, "min"] - 5, bb_tok[2, "max"] + 5, length.out = 80)
+x = seq(bb_tok[1, "min"] - 5, bb_tok[1, "max"] + 5, length.out = 100)
+y = seq(bb_tok[2, "min"] - 5, bb_tok[2, "max"] + 5, length.out = 100)
 coop = as.matrix(expand.grid(x, y))
 summary(coop)
 ind = point.in.polygon(coop[, 1], coop[, 2],
@@ -175,17 +175,10 @@ ind = point.in.polygon(coop[, 1], coop[, 2],
 coop = coop[which(ind == 1), ]
 plot(coop, asp = 1)
 
-Ap = inla.spde.make.A(mesh = mesh2, loc = coop)
-dim(Ap) #398, 611
-
+Ap = inla.spde.make.A(mesh = mesh, loc = coop)
+dim(Ap) #1518, 1738
 
 A.pred = inla.spde.make.A(mesh, mesh$loc[, 1:2])
-
-
-
-# spde
-spde = inla.spde2.pcmatern(mesh = mesh, alpha = 2, prior.range = c(0.01, 0.05), prior.sigma = c(1, 0.01))
-
 
 # stack ---------------------------------------------------------
 stk = inla.stack(
