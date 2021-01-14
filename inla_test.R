@@ -197,22 +197,28 @@ stk.pred = inla.stack(
 
 joint.stk = inla.stack(stk, stk.pred)
 
-form.barrier = y ~ 0 + intercept + f(s, barrier.model)
+form.barrier = y ~ 0 + intercept + f(s, model = barrier.model)
 
-stdev.pcprior = list(prior = 'pc.prec', param = c(2, 0.01))
+# stdev.pcprior = list(prior = 'pc.prec', param = c(2, 0.01))
 
-res = inla(
-  form.barrier,
-  data = inla.stack.data(joint.stk),
-  control.predictor = list(A = inla.stack.A(joint.stk),
-                           compute = TRUE),
-  family = 'binomial',
-  control.inla = list(int.strategy = 'eb')
-)
+# res = inla(
+#   form.barrier,
+#   data = inla.stack.data(joint.stk),
+#   control.predictor = list(A = inla.stack.A(joint.stk),
+#                            compute = TRUE),
+#   family = 'binomial',
+#   control.inla = list(int.strategy = 'eb')
+# )
 
-res = inla(form.barrier, 
-                data = inla.stack.data(joint.stk), 
-                family = c("binomial"), 
-                control.predictor = list(compute = TRUE, A = inla.stack.A(joint.stk)), 
-                control.results = list(return.marginals.random = FALSE, return.marginals.predictor = FALSE), 
-                control.compute = list(waic = TRUE, dic = TRUE))
+res.barrier <- inla(form.barrier, data = inla.stack.data(joint.stk),
+                    control.predictor = list(A = inla.stack.A(joint.stk)),
+                    family = 'binomial', 
+                    control.inla = list(int.strategy = "eb"),
+                    control.compute = list(waic = TRUE, dic = TRUE))
+
+# res = inla(form.barrier, 
+#                 data = inla.stack.data(joint.stk), 
+#                 family = c("binomial"), 
+#                 control.predictor = list(compute = TRUE, A = inla.stack.A(joint.stk)), 
+#                 control.results = list(return.marginals.random = FALSE, return.marginals.predictor = FALSE), 
+#                 control.compute = list(waic = TRUE, dic = TRUE))
