@@ -188,6 +188,48 @@ ind = point.in.polygon(coop[, 1], coop[, 2],
 coop = coop[which(ind == 1), ] #1518
 plot(coop, asp = 1)
 
-# , group = temp$time
-Ap = inla.spde.make.A(mesh = mesh, loc = coop)
-dim(Ap) #1518, 1738
+# inla.spde.make.A(mesh = mesh, loc = coop, group = temp$time) でエラー: 
+# Ap = inla.spde.make.A(mesh = mesh, loc = coop)
+Ap = inla.spde.make.A(mesh = mesh, loc = coop, group = length(unique(temp$time)))
+# Ap = inla.spde.make.A(mesh = mesh, loc = coop[rep(1:2, 3), ])
+dim(Ap) #1518, 1738 => 1518, 5214
+
+
+# ---------------------------------------------------------------
+# stack ---------------------------------------------------------
+# ---------------------------------------------------------------
+stk = inla.stack(
+  data = list(y = catch),
+  A = list(A, 1),
+  effects = list(iset, intercept = rep(1, length(catch))),
+  tag = 'est'
+)
+
+na = rep(NA, nrow(coop))
+stk.pred = inla.stack(
+  data = list(y = na),
+  A = list(Ap, 1),
+  effects = list(iset, intercept = rep(1, nrow(coop))),
+  tag = 'pred'
+)
+joint.stk = inla.stack(stk, stk.pred)
+
+# ---------------------------------------------------------------
+# formula -------------------------------------------------------
+# ---------------------------------------------------------------
+form.barrier = y ~ 0 + intercept + f(i, model = barrier.model, group = iset$i.group, control.group = list(model = "ar1"))
+
+
+# ---------------------------------------------------------------
+# fitting -------------------------------------------------------
+# ---------------------------------------------------------------
+# inla(form.barrier, data = inla.stack.data(joint.stk), control.predictor = list(A = inla.stack.A(joint.stk)),  でエラー: 
+# length(group) != length(xx) 5214 != 1419
+# 1419って何の数？
+res = inla(form.barrier, data = inla.stack.data(joint.stk),
+           control.predictor = list(A = inla.stack.A(joint.stk)),
+           family = 'binomial', 
+           control.inla = list(int.strategy = "eb"),
+           control.compute = list(waic = TRUE, dic = TRUE))
+res$waic$waic; res$dic$dic #28156, 28165
+summary(res)
