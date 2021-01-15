@@ -8,23 +8,43 @@ require(ggplot2)
 dir1 = "/Users/Yuki/Dropbox/same"
 setwd(dir1)
 
-### for all data
-temp = NULL
-for(i in 1:12){
-  df = read.csv(paste0("same", i, ".csv"))
-  temp = rbind(temp, df)
-}
-
-temp = temp %>% select(year, month, lon, lat, kg)
-
-# make time series
-times = data.frame(year = rep(min(temp$year):max(temp$year), each = length(unique(temp$month))), month = rep(1:max(temp$month)))
-times = times %>% filter(month != 7) %>% filter(month != 8) 
-times = times %>% mutate(time = rep(1:nrow(times)))
-
-# combine
-temp = left_join(temp, times, by = c("year", "month"))
-summary(temp)
+# ### for all data
+# temp = NULL
+# for(i in 1:12){
+#   df = read.csv(paste0("same", i, ".csv"))
+#   temp = rbind(temp, df)
+# }
+# 
+# temp = temp %>% select(year, month, lon, lat, kg)
+# 
+# # make time series
+# times = data.frame(year = rep(min(temp$year):max(temp$year), each = length(unique(temp$month))), month = rep(1:max(temp$month)))
+# times = times %>% filter(month != 7) %>% filter(month != 8) 
+# times = times %>% mutate(time = rep(1:nrow(times)))
+# 
+# # combine
+# temp = left_join(temp, times, by = c("year", "month"))
+# summary(temp)
+# 
+# 
+# ### for minimum data
+# m1 = read.csv('same1.csv')
+# summary(m1)
+# m1 = m1 %>% select(year, month, lon, lat, kg)
+# 
+# # 予備解析のためデータを小さくする
+# m1 = m1 %>% filter(year < 1982)
+# summary(m1)
+# catch = (m1$kg > 0) + 0 #バイナリーデータに変換
+# 
+# temp = m1
+# 
+# # make time series
+# times = data.frame(year = rep(min(temp$year):max(temp$year)), month = rep(unique(temp$month)))
+# times = times %>% mutate(time = rep(1:nrow(times)))
+# 
+# temp = left_join(temp, times, by = c("year", "month"))
+# summary(temp)
 
 
 ### for minimum data
@@ -33,7 +53,7 @@ summary(m1)
 m1 = m1 %>% select(year, month, lon, lat, kg)
 
 # 予備解析のためデータを小さくする
-m1 = m1 %>% filter(year < 1982)
+m1 = m1 %>% filter(year < 1975)
 summary(m1)
 catch = (m1$kg > 0) + 0 #バイナリーデータに変換
 
@@ -45,6 +65,7 @@ times = times %>% mutate(time = rep(1:nrow(times)))
 
 temp = left_join(temp, times, by = c("year", "month"))
 summary(temp)
+
 
 
 
@@ -206,5 +227,60 @@ ind = point.in.polygon(coop[, 1], coop[, 2],
 coop = coop[which(ind == 1), ] #1516
 plot(coop, asp = 1)
 
-Ap = inla.spde.make.A(mesh = mesh, loc = coop)
+loc2 = NULL
+for(i in 1:length(unique(temp$time))){
+  loc2 = rbind(loc2, coop)
+}
+
+Ap = inla.spde.make.A(mesh = mesh, loc = loc2)
 dim(Ap) #1518, 1738
+
+
+# ---------------------------------------------------------------
+# stack ---------------------------------------------------------
+# ---------------------------------------------------------------
+# stk = inla.stack(
+#   data = list(y = catch),
+#   A = list(A, 1, 1),
+#   effects = list(s = 1:mesh$n, intercept = rep(1, length(catch)*length(unique(temp$time))), time = rep(1:length(unique(temp$time)), each = length(catch))),
+#   tag = 'est'
+# )
+stk = inla.stack(
+  data = list(y = catch),
+  A = list(A, 1, 1),
+  effects = list(s = 1:mesh$n, intercept = rep(1, length(catch)), time = temp$time),
+  tag = 'est'
+)
+
+na = rep(NA, nrow(coop)*length(unique(temp$time)))
+# stk.pred = inla.stack(
+#   data = list(y = NA),
+#   A = list(A.pred, 1),
+#   effects = list(s = 1:mesh$n, intercept = rep(1, nrow(A.pred))),
+#   tag = 'pred'
+# )
+stk.pred = inla.stack(
+  data = list(y = na),
+  A = list(Ap, 1, 1),
+  effects = list(s = 1:mesh$n, intercept = rep(1, nrow(coop)*length(unique(temp$time))), time = rep(1:length(unique(temp$time)), each = nrow(coop))),
+  tag = 'pred'
+)
+joint.stk = inla.stack(stk, stk.pred)
+
+
+# ---------------------------------------------------------------
+# formula -------------------------------------------------------
+# ---------------------------------------------------------------
+form.barrier = y ~ 0 + intercept + f(s, model = barrier.model) + f(time, model = "rw1", scale.model = TRUE)
+
+
+# ---------------------------------------------------------------
+# fitting -------------------------------------------------------
+# ---------------------------------------------------------------
+res = inla(form.barrier, data = inla.stack.data(joint.stk),
+           control.predictor = list(A = inla.stack.A(joint.stk)),
+           family = 'binomial', 
+           control.inla = list(int.strategy = "eb"),
+           control.compute = list(waic = TRUE, dic = TRUE))
+res$waic$waic; res$dic$dic #28156, 28165
+summary(res)
