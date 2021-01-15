@@ -8,32 +8,13 @@ require(ggplot2)
 dir1 = "/Users/Yuki/Dropbox/same"
 setwd(dir1)
 
-### for all data
-temp = NULL
-for(i in 1:12){
-  df = read.csv(paste0("same", i, ".csv"))
-  temp = rbind(temp, df)
-}
-
-temp = temp %>% select(year, month, lon, lat, kg)
-
-# make time series
-times = data.frame(year = rep(min(temp$year):max(temp$year), each = length(unique(temp$month))), month = rep(1:max(temp$month)))
-times = times %>% filter(month != 7) %>% filter(month != 8) 
-times = times %>% mutate(time = rep(1:nrow(times)))
-
-# combine
-temp = left_join(temp, times, by = c("year", "month"))
-summary(temp)
-
-
 ### for minimum data
 m1 = read.csv('same1.csv')
 summary(m1)
 m1 = m1 %>% select(year, month, lon, lat, kg)
 
 # 予備解析のためデータを小さくする
-m1 = m1 %>% filter(year < 1982)
+m1 = m1 %>% filter(year < 1975)
 summary(m1)
 catch = (m1$kg > 0) + 0 #バイナリーデータに変換
 
@@ -147,21 +128,22 @@ barrier.model <- inla.barrier.pcmatern(mesh,
                                        barrier.triangles = barrier.tri)
 Q <- inla.rgeneric.q(barrier.model, "Q", theta = c(0, log(range)))
 
-
+iset = inla.spde.make.index("i", n.spde = barrier.model$f$n, n.group = length(unique(temp$time)))
 
 
 # ---------------------------------------------------------------
 # projector matrix ----------------------------------------------
 # ---------------------------------------------------------------
 # lonlat
-loc = as.matrix(cbind(m1$lon, m1$lat))
+loc = as.matrix(cbind(temp$lon, temp$lat))
 
 # projector matrix
-A = inla.spde.make.A(mesh, loc = loc)
-dim(A) 
-table(rowSums(A > 0)) 
-table(rowSums(A)) 
-table(colSums(A) > 0) 
+# A = inla.spde.make.A(mesh, loc = loc)
+A = inla.spde.make.A(mesh, loc = loc, group = temp$time)
+dim(A) #20558, 5214
+table(rowSums(A > 0)) # 3が20558
+table(rowSums(A)) # 1が20558
+table(colSums(A) > 0) # FALSEが4519, TRUEが695
 
 plot(mesh)
 points(loc, col = "red", pch = 16, cex = 0.5)
@@ -203,8 +185,9 @@ coop = as.matrix(expand.grid(x, y))
 summary(coop)
 ind = point.in.polygon(coop[, 1], coop[, 2],
                        tok_bor[, 1], tok_bor[, 2])
-coop = coop[which(ind == 1), ] #1516
+coop = coop[which(ind == 1), ] #1518
 plot(coop, asp = 1)
 
+# , group = temp$time
 Ap = inla.spde.make.A(mesh = mesh, loc = coop)
 dim(Ap) #1518, 1738
