@@ -80,6 +80,8 @@ source('R/initial_setup.R')
 opts_chunk$set(
   fig.path = 'figs/barrier-'
 )
+source('R/spde-book-functions.R')
+
 library(scales)
 library(rgeos)
 ## High resolution maps when using map()
@@ -326,3 +328,30 @@ g = ggplot(data = m_dpm, aes(east, north, colour = value))
 p = geom_point()
 g+p+pol+theme_bw()+labs(x = "", y = "", title = "Jan. 1972-1981", colour = "Logit\n (encounter prob.)") + scale_colour_gradientn(colours = c("black", "blue", "cyan", "green", "yellow", "orange", "red", "darkred"))
 
+
+
+
+# re-make maps --------------------------------------------------
+local.plot.field <- function(field, ...){
+  xlim = c(127, 145)
+  ylim = c(33, 43)
+  proj = inla.mesh.projector(mesh, xlim = xlim,
+                             ylim = ylim, dims=c(300, 300))
+  field.proj = inla.mesh.project(proj, field)
+  image.plot(list(x = proj$x, y = proj$y, z = field.proj),
+             xlim = xlim, ylim = ylim, ...)
+  plot(poly.barrier, add = TRUE, col = 'grey')
+}
+
+
+par(mfrow = c(2, 2), mar = c(2, 2, 1, 1), mgp = c(2, 0.7, 0), las = 1)
+
+for(i in 1:length(unique(temp$year))) {
+  # Rough estimate of posterior mean
+  local.plot.field(
+    res$summary.random$s$mean + res$summary.fixed$mean[1] +
+      res$summary.random$time$mean[i],
+    main = paste0("Time: ", i+1971), asp = 1,
+    col = book.color.c(100),
+    axes = FALSE)
+}
