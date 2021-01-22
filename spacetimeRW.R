@@ -67,6 +67,24 @@ temp = left_join(temp, times, by = c("year", "month"))
 summary(temp)
 
 
+# for some year using all month data
+m1 = NULL
+for(i in 1:12){
+  data = read.csv(paste0("same", i, ".csv"))
+  m1 = rbind(m1, data)
+}
+
+summary(m1)
+temp = m1 %>% dplyr::filter(year == 1972)
+summary(temp$year)
+catch = (temp$kg > 0) + 0 #バイナリーデータに変換
+
+# make time series
+times = data.frame(year = rep(min(temp$year):max(temp$year)), month = rep(unique(temp$month)))
+times = times %>% mutate(time = rep(1:nrow(times)))
+
+temp = left_join(temp, times, by = c("year", "month"))
+summary(temp)
 
 
 # ---------------------------------------------------------------
@@ -303,6 +321,8 @@ dpm_c = rbind(data.frame(east = coop[, 1], north = coop[, 2],
                          value = pred_ll_c, variable = "pred_ll_catch"),
               data.frame(east = coop[, 1], north = coop[, 2],
                          value = pred_ul_c, variable = "pred_ul_catch"))
+recheck = data.frame(east = coop[, 1], north = coop[, 2],
+                     value = pred_mean_c, variable = "pred_mean_catch")
 
 dpm_c$variable = as.factor(dpm_c$variable)
 
@@ -344,14 +364,27 @@ local.plot.field <- function(field, ...){
 }
 
 
-par(mfrow = c(2, 2), mar = c(2, 2, 1, 1), mgp = c(2, 0.7, 0), las = 1)
+par(mfrow = c(2, 2), mar = c(2, 2, 1, 1), mgp = c(2, 0.7, 0), las = 1, oma = c(0, 0, 0.5, 1))
 
 for(i in 1:length(unique(temp$year))) {
   # Rough estimate of posterior mean
   local.plot.field(
     res$summary.random$s$mean + res$summary.fixed$mean[1] +
       res$summary.random$time$mean[i],
-    main = paste0("Time: ", i+1971), asp = 1,
+    main = paste0(i+1971), zlim = c(-7, 4), asp = 1,
     col = book.color.c(100),
     axes = FALSE)
 }
+
+
+space = res$summary.random$s$mean #vector 1738
+intercept = res$summary.fixed$mean[1] #scaler
+time = res$summary.random$time$mean[1] #scaler
+
+test = space+intercept+time #長さ1738
+
+
+test2 = data.frame(east = coop[, 1], north = coop[, 2], #1518
+                   value = test, variable = "pred_mean_time1")
+
+
