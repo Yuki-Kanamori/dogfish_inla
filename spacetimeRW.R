@@ -322,6 +322,7 @@ c_map = coord_map(xlim = c(127, 145), ylim = c(33, 43))
 m_dpm = dpm_c %>% filter(str_detect(variable, "mean"))
 unique(m_dpm$variable)
 
+g = ggplot(data = m_dpm, aes(east, north, colour = value))
 p = geom_point()
 g+p+pol+theme_bw()+labs(x = "", y = "", title = "Jan. 1972-1981", colour = "Logit\n (encounter prob.)") + scale_colour_gradientn(colours = c("black", "blue", "cyan", "green", "yellow", "orange", "red", "darkred"))
 
