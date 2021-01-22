@@ -195,7 +195,8 @@ Q <- inla.rgeneric.q(barrier.model, "Q", theta = c(0, log(range)))
 # projector matrix ----------------------------------------------
 # ---------------------------------------------------------------
 # lonlat
-loc = as.matrix(cbind(m1$lon, m1$lat))
+# loc = as.matrix(cbind(m1$lon, m1$lat))
+loc = as.matrix(cbind(temp$lon, temp$lat))
 
 # projector matrix
 A = inla.spde.make.A(mesh, loc = loc)
@@ -302,7 +303,7 @@ res = inla(form.barrier, data = inla.stack.data(joint.stk),
            family = 'binomial', 
            control.inla = list(int.strategy = "eb"),
            control.compute = list(waic = TRUE, dic = TRUE))
-res$waic$waic; res$dic$dic #28156, 28165
+res$waic$waic; res$dic$dic
 summary(res)
 
 
@@ -364,9 +365,9 @@ local.plot.field <- function(field, ...){
 }
 
 
-par(mfrow = c(2, 2), mar = c(2, 2, 1, 1), mgp = c(2, 0.7, 0), las = 1, oma = c(0, 0, 0.5, 1))
+par(mfrow = c(9, 5), mar = c(2, 2, 1, 1), mgp = c(2, 0.7, 0), las = 1, oma = c(0, 0, 0.5, 1))
 
-for(i in 1:length(unique(temp$year))) {
+for(i in 1:length(unique(temp$time))) {
   # Rough estimate of posterior mean
   local.plot.field(
     res$summary.random$s$mean + res$summary.fixed$mean[1] +
@@ -376,6 +377,17 @@ for(i in 1:length(unique(temp$year))) {
     axes = FALSE)
 }
 
+
+par(mfrow = c(4, 3), mar = c(2, 2, 1, 1), mgp = c(2, 0.7, 0), las = 1, oma = c(0, 0, 0.5, 1))
+for(i in 1:length(unique(temp$time))) {
+  # Rough estimate of posterior mean
+  local.plot.field(
+    res$summary.random$s$mean + res$summary.fixed$mean[1] +
+      res$summary.random$time$mean[i],
+    main = paste0(times[i, "month"]), zlim = c(-7, 4), asp = 1,
+    col = book.color.c(100),
+    axes = FALSE)
+}
 
 space = res$summary.random$s$mean #vector 1738
 intercept = res$summary.fixed$mean[1] #scaler
