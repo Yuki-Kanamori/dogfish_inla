@@ -269,7 +269,7 @@ unique(m_dpm$variable)
 # s = scale_fill_gradient(name = "encounter prob. (logit)", low = "blue", high = "orange")
 # g+t+f+c+s+pol+c_map+theme_bw()+labs(x = "", y = "", title = "Jan. 1972-1981", colour = "Logit (encounter prob.)")
 # 
-# g = ggplot(data = m_dpm, aes(east, north, colour = value))
+g = ggplot(data = m_dpm, aes(east, north, colour = value))
 p = geom_point()
 g+p+pol+theme_bw()+labs(x = "", y = "", title = "Jan. 1972-1981", colour = "Logit\n (encounter prob.)") + scale_colour_gradientn(colours = c("black", "blue", "cyan", "green", "yellow", "orange", "red", "darkred"))
 
