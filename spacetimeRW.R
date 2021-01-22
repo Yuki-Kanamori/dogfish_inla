@@ -284,3 +284,44 @@ res = inla(form.barrier, data = inla.stack.data(joint.stk),
            control.compute = list(waic = TRUE, dic = TRUE))
 res$waic$waic; res$dic$dic #28156, 28165
 summary(res)
+
+
+# plot the fitted values on a map -------------------------------
+best_kono = res
+
+index_cp = inla.stack.index(joint.stk, tag = "pred")$data
+
+pred_mean_c = best_kono$summary.fitted.values[index_cp, "mean"]
+pred_ll_c = best_kono$summary.fitted.values[index_cp, "0.025quant"]
+pred_ul_c = best_kono$summary.fitted.values[index_cp, "0.975quant"]
+
+dpm_c = rbind(data.frame(east = coop[, 1], north = coop[, 2],
+                         value = pred_mean_c, variable = "pred_mean_catch"),
+              data.frame(east = coop[, 1], north = coop[, 2],
+                         value = pred_ll_c, variable = "pred_ll_catch"),
+              data.frame(east = coop[, 1], north = coop[, 2],
+                         value = pred_ul_c, variable = "pred_ul_catch"))
+
+dpm_c$variable = as.factor(dpm_c$variable)
+
+g2 = ggplot(data = dpm_c, aes(east, north, fill = value))
+t = geom_tile()
+f = facet_wrap(~ variable)
+c = coord_fixed(ratio = 1)
+s = scale_fill_gradient(name = "encounter prob. (logit)", low = "blue", high = "orange")
+g2+t+f+c+s+theme_bw()
+
+
+# with map
+world_map <- map_data("world")
+jap <- subset(world_map, world_map$region == "Japan")
+jap_cog <- jap[jap$lat > 33 & jap$lat < 43 & jap$long > 127 & jap$long < 145, ]
+pol = geom_polygon(data = jap_cog, aes(x=long, y=lat, group=group), colour="gray 50", fill="gray 50")
+c_map = coord_map(xlim = c(127, 145), ylim = c(33, 43))
+
+m_dpm = dpm_c %>% filter(str_detect(variable, "mean"))
+unique(m_dpm$variable)
+
+p = geom_point()
+g+p+pol+theme_bw()+labs(x = "", y = "", title = "Jan. 1972-1981", colour = "Logit\n (encounter prob.)") + scale_colour_gradientn(colours = c("black", "blue", "cyan", "green", "yellow", "orange", "red", "darkred"))
+
