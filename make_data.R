@@ -191,6 +191,7 @@ po = po %>% mutate(year = as.numeric(str_sub(CatchDate, 1, 4)), month = as.numer
 ab = po %>% filter(Aburatsunozame > 0)
 summary(ab)
 
+### check around Hoppo Ryodo
 ab2 = po %>% filter(year > 1993, Longitude > 144) 
 ab2 = ab2 %>% mutate(pa = ifelse(ab2$Aburatsunozame > 0, 1, 0), tag = 1)
 summary(ab2)
@@ -198,3 +199,11 @@ pre = ab2 %>% dplyr::group_by(year) %>% dplyr::summarize(count = sum(pa))
 rec = ab2 %>% dplyr::group_by(year) %>% dplyr::summarize(total = sum(tag))
 check = left_join(pre, rec, by = "year") %>% mutate(freq = (count/total)*100)
 
+
+### check around Erimo
+ab3 = po %>% filter(year > 1993, Longitude < 145, Latitude > 41)
+ab3 = ab3 %>% mutate(pa = ifelse(ab3$Aburatsunozame > 0, 1, 0), tag = 1)
+summary(ab3)
+pre2 = ab3 %>% dplyr::group_by(year) %>% dplyr::summarize(count = sum(pa))
+rec2 = ab3 %>% dplyr::group_by(year) %>% dplyr::summarize(total = sum(tag))
+check2 = left_join(pre2, rec2, by = "year") %>% mutate(freq = (count/total)*100)
