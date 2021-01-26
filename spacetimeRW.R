@@ -8,43 +8,33 @@ require(ggplot2)
 dir1 = "/Users/Yuki/Dropbox/same"
 setwd(dir1)
 
-# ### for all data
-# temp = NULL
-# for(i in 1:12){
-#   df = read.csv(paste0("same", i, ".csv"))
-#   temp = rbind(temp, df)
-# }
+### for all data
+temp = NULL
+for(i in 1:12){
+  df = read.csv(paste0("same", i, ".csv"))
+  temp = rbind(temp, df)
+}
+
+summary(temp)
+
+
+# make time series
+times = data.frame(year = rep(min(temp$year):max(temp$year), each = length(unique(temp$month))), month = rep(1:max(temp$month)))
+times = times %>% filter(month != 7) %>% filter(month != 8) %>% filter(year != 2012)
+times = times %>% mutate(time = rep(1:nrow(times)))
+
+# combine
+temp = temp %>% select(year, month, lon, lat, kg) %>% filter(month != 7) %>% filter(month != 8) %>% filter(year != 2012)
+unique(temp$month)
+temp = left_join(temp, times, by = c("year", "month"))
+summary(temp)
+
+temp = temp %>% filter(lon < 145) %>% filter(lat < 42)
+summary(temp)
+catch = (temp$kg > 0) + 0 #バイナリーデータに変換
 # 
-# temp = temp %>% select(year, month, lon, lat, kg)
 # 
-# # make time series
-# times = data.frame(year = rep(min(temp$year):max(temp$year), each = length(unique(temp$month))), month = rep(1:max(temp$month)))
-# times = times %>% filter(month != 7) %>% filter(month != 8) 
-# times = times %>% mutate(time = rep(1:nrow(times)))
-# 
-# # combine
-# temp = left_join(temp, times, by = c("year", "month"))
-# summary(temp)
-# 
-# 
-# ### for minimum data
-# m1 = read.csv('same1.csv')
-# summary(m1)
-# m1 = m1 %>% select(year, month, lon, lat, kg)
-# 
-# # 予備解析のためデータを小さくする
-# m1 = m1 %>% filter(year < 1982)
-# summary(m1)
-# catch = (m1$kg > 0) + 0 #バイナリーデータに変換
-# 
-# temp = m1
-# 
-# # make time series
-# times = data.frame(year = rep(min(temp$year):max(temp$year)), month = rep(unique(temp$month)))
-# times = times %>% mutate(time = rep(1:nrow(times)))
-# 
-# temp = left_join(temp, times, by = c("year", "month"))
-# summary(temp)
+
 
 
 ### for minimum data
@@ -63,6 +53,8 @@ times = data.frame(year = rep(min(temp$year):max(temp$year)), month = rep(unique
 times = times %>% mutate(time = rep(1:nrow(times)))
 
 temp = left_join(temp, times, by = c("year", "month"))
+temp = temp %>% filter(lon < 145) %>% filter(lat < 42)
+summary(temp)
 catch = (temp$kg > 0) + 0 #バイナリーデータに変換
 summary(temp)
 
@@ -83,6 +75,8 @@ times = data.frame(year = rep(min(temp$year):max(temp$year)), month = rep(unique
 times = times %>% mutate(time = rep(1:nrow(times)))
 
 temp = left_join(temp, times, by = c("year", "month"))
+temp = temp %>% filter(lon < 145) %>% filter(lat < 42)
+summary(temp)
 catch = (temp$kg > 0) + 0 #バイナリーデータに変換
 
 summary(temp)
