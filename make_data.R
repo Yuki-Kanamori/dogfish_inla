@@ -143,3 +143,58 @@ for(i in 1:12){
   write.csv(data, paste0(file_name, ".csv"), fileEncoding = "CP932")
 }
 
+
+
+
+
+# data check in Hokkaido ----------------------------------------
+# PO ------------------------------------------------------------
+dir_po = "/Users/Yuki/Dropbox/same/PO"
+setwd(dir_po)
+path = dir_po
+files = list.files(path)
+
+po = NULL
+for(i in 1:length(files)){
+  data = read.csv(paste0(files[i]), fileEncoding = "CP932")
+  
+  if("Same" %in% colnames(data)){
+    data2 = data %>% select(CatchDate, Effort_tow, Same, Latitude, Longitude)
+    kg = data2$Same
+    kg[is.na(kg)] = 0
+    data2$Same = kg
+    
+    if("Ei" %in% colnames(data)){
+      ei = data$Ei
+      ei[is.na(ei)] = 0
+      data2 = data2 %>% mutate(Ei = ei)
+    }else{
+      data2$Ei = 0
+    }
+    
+    data2$Aburatsunozame = 0
+  }
+  
+  if("Aburatsunozame" %in% colnames(data)){
+    data2 = data %>% select(CatchDate, Effort_tow, Aburatsunozame, Latitude, Longitude)
+    kg = data2$Aburatsunozame
+    kg[is.na(kg)] = 0
+    data2$Aburatsunozame = kg
+    
+    data2 = data2 %>% mutate(Same = 0, Ei = 0)
+  }
+  po = rbind(po, data2)
+}
+
+po = po %>% mutate(year = as.numeric(str_sub(CatchDate, 1, 4)), month = as.numeric(str_sub(CatchDate, 5, 6)), day = as.numeric(str_sub(CatchDate, 7, 8)))
+
+ab = po %>% filter(Aburatsunozame > 0)
+summary(ab)
+
+ab2 = po %>% filter(year > 1993, Longitude > 144) 
+ab2 = ab2 %>% mutate(pa = ifelse(ab2$Aburatsunozame > 0, 1, 0), tag = 1)
+summary(ab2)
+pre = ab2 %>% dplyr::group_by(year) %>% dplyr::summarize(count = sum(pa))
+rec = ab2 %>% dplyr::group_by(year) %>% dplyr::summarize(total = sum(tag))
+check = left_join(pre, rec, by = "year") %>% mutate(freq = (count/total)*100)
+
