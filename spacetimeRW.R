@@ -129,17 +129,17 @@ pl.sel <- SpatialPolygons(list(Polygons(list(Polygon(
         c(34,  39,  43,  43,  38,  34)), # y-axis
   FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
 
-### 北海道を除去しなかった場合
-pl.sel <- SpatialPolygons(list(Polygons(list(Polygon(
-  cbind(c(128, 132, 138, 151, 151, 144, 144, 144), # x-axis 
-        c(34,  39,  43,  47, 43.5,  41, 38,  34)), # y-axis
-  FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
-
-### 北海道の日本海側・オホーツクも推定する場合
-pl.sel <- SpatialPolygons(list(Polygons(list(Polygon(
-  cbind(c(128, 132, 138, 140, 151, 151, 144, 144, 144), # x-axis 
-        c(34,  39,  43,  46, 47, 43.5,  41, 38,  34)), # y-axis
-  FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
+# ### 北海道を除去しなかった場合
+# pl.sel <- SpatialPolygons(list(Polygons(list(Polygon(
+#   cbind(c(128, 132, 138, 151, 151, 144, 144, 144), # x-axis 
+#         c(34,  39,  43,  47, 43.5,  41, 38,  34)), # y-axis
+#   FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
+# 
+# ### 北海道の日本海側・オホーツクも推定する場合
+# pl.sel <- SpatialPolygons(list(Polygons(list(Polygon(
+#   cbind(c(128, 132, 138, 140, 151, 151, 144, 144, 144), # x-axis 
+#         c(34,  39,  43,  46, 47, 43.5,  41, 38,  34)), # y-axis
+#   FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
 
 summary(pl.sel)
 poly.water <- gDifference(pl.sel, map.sp) #緯度経度
@@ -242,17 +242,17 @@ pl.sel2 <- SpatialPolygons(list(Polygons(list(Polygon(
         c(34,  39,  43,  43,  38,  34)), # y-axis
   FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
 
-### 北海道を除去しなかった場合
-pl.sel2 <- SpatialPolygons(list(Polygons(list(Polygon(
-  cbind(c(128, 132, 138, 151, 151, 144, 144, 144), # x-axis 
-        c(34,  39,  43,  47, 43.5,  41, 38,  34)), # y-axis
-  FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
-
-### 北海道の日本海側・オホーツクも推定する場合
-pl.sel2 <- SpatialPolygons(list(Polygons(list(Polygon(
-  cbind(c(128, 132, 138, 140, 151, 151, 144, 144, 144), # x-axis 
-        c(34,  39,  43,  46, 47, 43.5,  41, 38,  34)), # y-axis
-  FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
+# ### 北海道を除去しなかった場合
+# pl.sel2 <- SpatialPolygons(list(Polygons(list(Polygon(
+#   cbind(c(128, 132, 138, 151, 151, 144, 144, 144), # x-axis 
+#         c(34,  39,  43,  47, 43.5,  41, 38,  34)), # y-axis
+#   FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
+# 
+# ### 北海道の日本海側・オホーツクも推定する場合
+# pl.sel2 <- SpatialPolygons(list(Polygons(list(Polygon(
+#   cbind(c(128, 132, 138, 140, 151, 151, 144, 144, 144), # x-axis 
+#         c(34,  39,  43,  46, 47, 43.5,  41, 38,  34)), # y-axis
+#   FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
 
 summary(pl.sel2)
 poly.water2 <- gDifference(pl.sel2, map.sp)
