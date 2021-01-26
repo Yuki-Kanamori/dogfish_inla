@@ -75,7 +75,7 @@ for(i in 1:12){
 }
 
 summary(m1)
-temp = m1 %>% dplyr::filter(year == 1972)
+temp = m1 %>% dplyr::filter(year == 2012)
 summary(temp$year)
 catch = (temp$kg > 0) + 0 #バイナリーデータに変換
 
@@ -110,7 +110,9 @@ library(maptools)
 
 # North Japan -----------------------------------------------------------
 # Select region 
-map <- map("world", "Japan", fill = TRUE,
+# map <- map("world", "Japan", fill = TRUE,
+#            col = "transparent", plot = TRUE)Russia
+map <- map("world", c("Japan", "Russia"), fill = TRUE,
            col = "transparent", plot = TRUE)
 IDs <- sapply(strsplit(map$names, ":"), function(x) x[1])
 map.sp <- map2SpatialPolygons(
@@ -120,14 +122,24 @@ summary(map.sp)
 
 
 # make a polygon ------------------------------------------------------------
-# pl.sel <- SpatialPolygons(list(Polygons(list(Polygon(
-#   cbind(c(135, 137, 139, 143, 144, 144), # x-axis 
-#         c(35,  39,  42,  42,  38,  36.2)), # y-axis
-#   FALSE)), '0')), proj4string = CRS(proj4string(map.sp)))
+## lat < 42で北海道を除去した場合
 pl.sel <- SpatialPolygons(list(Polygons(list(Polygon(
-  cbind(c(128, 132, 138, 144, 144, 144), # x-axis 
+  cbind(c(128, 132, 138, 144, 144, 144), # x-axis
         c(34,  39,  43,  43,  38,  34)), # y-axis
   FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
+
+### 北海道を除去しなかった場合
+pl.sel <- SpatialPolygons(list(Polygons(list(Polygon(
+  cbind(c(128, 132, 138, 151, 151, 144, 144, 144), # x-axis 
+        c(34,  39,  43,  47, 43.5,  41, 38,  34)), # y-axis
+  FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
+
+### 北海道の日本海側・オホーツクも推定する場合
+pl.sel <- SpatialPolygons(list(Polygons(list(Polygon(
+  cbind(c(128, 132, 138, 140, 151, 151, 144, 144, 144), # x-axis 
+        c(34,  39,  43,  46, 47, 43.5,  41, 38,  34)), # y-axis
+  FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
+
 summary(pl.sel)
 poly.water <- gDifference(pl.sel, map.sp) #緯度経度
 summary(poly.water)
@@ -223,10 +235,24 @@ map.sp <- map2SpatialPolygons(
 summary(map.sp)
 
 
+## lat < 42で北海道を除去した場合
 pl.sel2 <- SpatialPolygons(list(Polygons(list(Polygon(
   cbind(c(128, 132, 138, 144, 144, 144), # x-axis 
         c(34,  39,  43,  43,  38,  34)), # y-axis
   FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
+
+### 北海道を除去しなかった場合
+pl.sel2 <- SpatialPolygons(list(Polygons(list(Polygon(
+  cbind(c(128, 132, 138, 151, 151, 144, 144, 144), # x-axis 
+        c(34,  39,  43,  47, 43.5,  41, 38,  34)), # y-axis
+  FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
+
+### 北海道の日本海側・オホーツクも推定する場合
+pl.sel2 <- SpatialPolygons(list(Polygons(list(Polygon(
+  cbind(c(128, 132, 138, 140, 151, 151, 144, 144, 144), # x-axis 
+        c(34,  39,  43,  46, 47, 43.5,  41, 38,  34)), # y-axis
+  FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
+
 summary(pl.sel2)
 poly.water2 <- gDifference(pl.sel2, map.sp)
 plot(pl.sel2)
@@ -337,8 +363,14 @@ g2+t+f+c+s+theme_bw()
 
 # with map
 world_map <- map_data("world")
+
+### 北海道を除く場合
 jap <- subset(world_map, world_map$region == "Japan")
 jap_cog <- jap[jap$lat > 33 & jap$lat < 43 & jap$long > 127 & jap$long < 145, ]
+
+### 北海道を入れる場合
+jap_cog <- world_map[world_map$lat > 33 & world_map$lat < 47 & world_map$long > 127 & world_map$long < 152, ]
+
 pol = geom_polygon(data = jap_cog, aes(x=long, y=lat, group=group), colour="gray 50", fill="gray 50")
 c_map = coord_map(xlim = c(127, 145), ylim = c(33, 43))
 
@@ -354,8 +386,10 @@ g+p+pol+theme_bw()+labs(x = "", y = "", title = "Jan. 1972-1981", colour = "Logi
 
 # re-make maps --------------------------------------------------
 local.plot.field <- function(field, ...){
-  xlim = c(127, 145)
-  ylim = c(33, 43)
+  # xlim = c(127, 145)
+  # ylim = c(33, 43)
+  xlim = c(127, 152)
+  ylim = c(33, 47)
   proj = inla.mesh.projector(mesh, xlim = xlim,
                              ylim = ylim, dims=c(300, 300))
   field.proj = inla.mesh.project(proj, field)
@@ -365,7 +399,8 @@ local.plot.field <- function(field, ...){
 }
 
 
-par(mfrow = c(9, 5), mar = c(2, 2, 1, 1), mgp = c(2, 0.7, 0), las = 1, oma = c(0, 0, 0.5, 1))
+# par(mfrow = c(9, 5), mar = c(2, 2, 1, 1), mgp = c(2, 0.7, 0), las = 1, oma = c(0, 0, 0.5, 1))
+par(mfrow = c(1, 3), mar = c(2, 2, 1, 1), mgp = c(2, 0.7, 0), las = 1, oma = c(0, 0, 0.5, 1))
 
 for(i in 1:length(unique(temp$time))) {
   # Rough estimate of posterior mean
@@ -380,6 +415,16 @@ for(i in 1:length(unique(temp$time))) {
 
 par(mfrow = c(4, 3), mar = c(2, 2, 1, 1), mgp = c(2, 0.7, 0), las = 1, oma = c(0, 0, 0.5, 1))
 for(i in 1:length(unique(temp$time))) {
+  # Rough estimate of posterior mean
+  local.plot.field(
+    res$summary.random$s$mean + res$summary.fixed$mean[1] +
+      res$summary.random$time$mean[i],
+    main = paste0(times[i, "month"]), zlim = c(-7, 4), asp = 1,
+    col = book.color.c(100),
+    axes = FALSE)
+}
+par(mfrow = c(2, 3), mar = c(2, 2, 1, 1), mgp = c(2, 0.7, 0), las = 1, oma = c(0, 0, 0.5, 1))
+for(i in 1:6) {
   # Rough estimate of posterior mean
   local.plot.field(
     res$summary.random$s$mean + res$summary.fixed$mean[1] +
