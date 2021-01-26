@@ -55,7 +55,6 @@ m1 = m1 %>% select(year, month, lon, lat, kg)
 # 予備解析のためデータを小さくする
 m1 = m1 %>% filter(year < 1975)
 summary(m1)
-catch = (m1$kg > 0) + 0 #バイナリーデータに変換
 
 temp = m1
 
@@ -64,10 +63,11 @@ times = data.frame(year = rep(min(temp$year):max(temp$year)), month = rep(unique
 times = times %>% mutate(time = rep(1:nrow(times)))
 
 temp = left_join(temp, times, by = c("year", "month"))
+catch = (temp$kg > 0) + 0 #バイナリーデータに変換
 summary(temp)
 
 
-# for some year using all month data
+### for some year using all month data
 m1 = NULL
 for(i in 1:12){
   data = read.csv(paste0("same", i, ".csv"))
@@ -75,15 +75,16 @@ for(i in 1:12){
 }
 
 summary(m1)
-temp = m1 %>% dplyr::filter(year == 2012)
+temp = m1 %>% dplyr::filter(year == 1990)
 summary(temp$year)
-catch = (temp$kg > 0) + 0 #バイナリーデータに変換
 
 # make time series
 times = data.frame(year = rep(min(temp$year):max(temp$year)), month = rep(unique(temp$month)))
 times = times %>% mutate(time = rep(1:nrow(times)))
 
 temp = left_join(temp, times, by = c("year", "month"))
+catch = (temp$kg > 0) + 0 #バイナリーデータに変換
+
 summary(temp)
 
 
@@ -376,6 +377,7 @@ c_map = coord_map(xlim = c(127, 145), ylim = c(33, 43))
 
 m_dpm = dpm_c %>% filter(str_detect(variable, "mean"))
 unique(m_dpm$variable)
+summary(m_dpm)
 
 g = ggplot(data = m_dpm, aes(east, north, colour = value))
 p = geom_point()
@@ -399,9 +401,9 @@ local.plot.field <- function(field, ...){
 }
 
 
+### year trend
 # par(mfrow = c(9, 5), mar = c(2, 2, 1, 1), mgp = c(2, 0.7, 0), las = 1, oma = c(0, 0, 0.5, 1))
 par(mfrow = c(1, 3), mar = c(2, 2, 1, 1), mgp = c(2, 0.7, 0), las = 1, oma = c(0, 0, 0.5, 1))
-
 for(i in 1:length(unique(temp$time))) {
   # Rough estimate of posterior mean
   local.plot.field(
@@ -412,17 +414,19 @@ for(i in 1:length(unique(temp$time))) {
     axes = FALSE)
 }
 
-
+### seasonality
 par(mfrow = c(4, 3), mar = c(2, 2, 1, 1), mgp = c(2, 0.7, 0), las = 1, oma = c(0, 0, 0.5, 1))
 for(i in 1:length(unique(temp$time))) {
   # Rough estimate of posterior mean
   local.plot.field(
     res$summary.random$s$mean + res$summary.fixed$mean[1] +
       res$summary.random$time$mean[i],
-    main = paste0(times[i, "month"]), zlim = c(-7, 4), asp = 1,
+    main = paste0(times[i, "month"]), zlim = c(-1, 1), asp = 1,
     col = book.color.c(100),
     axes = FALSE)
 }
+
+
 par(mfrow = c(2, 3), mar = c(2, 2, 1, 1), mgp = c(2, 0.7, 0), las = 1, oma = c(0, 0, 0.5, 1))
 for(i in 1:6) {
   # Rough estimate of posterior mean
