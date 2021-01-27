@@ -29,7 +29,7 @@ unique(temp$month)
 temp = left_join(temp, times, by = c("year", "month"))
 summary(temp)
 
-temp = temp %>% filter(lon < 145) %>% filter(lat < 42)
+temp = temp %>% filter(lon < 145) %>% filter(lat < 42) %>% filter(year < 1988)
 summary(temp)
 catch = (temp$kg > 0) + 0 #バイナリーデータに変換
 # 
