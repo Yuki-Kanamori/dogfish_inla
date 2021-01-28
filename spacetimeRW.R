@@ -531,7 +531,12 @@ t = geom_tile()
 # v = scale_fill_viridis(na.value = "transparent")
 c = coord_fixed(ratio = 1)
 labs = labs(x = "Longitude", y = "Latitude", colour = "Logit \n (encounter probability)")
-g+t+c+pol+c_map+labs+theme_bw()
+th = theme(panel.grid.major = element_blank(),
+           panel.grid.minor = element_blank(),
+           axis.text.x = element_text(size = rel(1)),
+           axis.text.y = element_text(size = rel(1)),
+           axis.title.x = element_text(size = rel(1)),
+           axis.title.y = element_text(size = rel(1)),
+           legend.title = element_text(size = 10))
+g+t+c+pol+c_map+theme_bw()+scale_fill_gradientn(colours = c("blue", "cyan", "green", "yellow", "orange", "red", "darkred"))+labs
 
-
-p+c+pol+c_map+labs+theme_bw()+th
