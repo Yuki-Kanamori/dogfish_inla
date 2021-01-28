@@ -38,12 +38,12 @@ catch = (temp$kg > 0) + 0 #バイナリーデータに変換
 
 
 ### for minimum data
-m1 = read.csv('same3.csv')
+m1 = read.csv('same1.csv')
 summary(m1)
 m1 = m1 %>% select(year, month, lon, lat, kg)
 
 # 予備解析のためデータを小さくする
-m1 = m1 %>% filter(year < 1977)
+m1 = m1 %>% filter(year < 2012)
 summary(m1)
 
 temp = m1
