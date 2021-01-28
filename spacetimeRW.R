@@ -402,7 +402,7 @@ local.plot.field <- function(field, ...){
   xlim = c(135, 143)
   ylim = c(37, 43)
   proj = inla.mesh.projector(mesh, xlim = xlim,
-                             ylim = ylim, dims=c(300, 300))
+                             ylim = ylim, dims=c(100, 100))
   field.proj = inla.mesh.project(proj, field)
   image.plot(list(x = proj$x, y = proj$y, z = field.proj),
              xlim = xlim, ylim = ylim, ...)
