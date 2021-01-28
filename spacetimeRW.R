@@ -406,7 +406,7 @@ local.plot.field <- function(field, ...){
   field.proj = inla.mesh.project(proj, field)
   image.plot(list(x = proj$x, y = proj$y, z = field.proj),
              xlim = xlim, ylim = ylim, ...)
-  plot(poly.barrier, add = TRUE, col = 'grey')
+  #plot(poly.barrier, add = TRUE, col = 'grey')
 }
 
 
@@ -447,14 +447,71 @@ for(i in 1:6) {
     axes = FALSE)
 }
 
-space = res$summary.random$s$mean #vector 1738
+
+
+# 推定値を取り出す ------------------------------------------------------
+space = res$summary.random$s$mean #vector 696
 intercept = res$summary.fixed$mean[1] #scaler
 time = res$summary.random$time$mean[1] #scaler
 
-test = space+intercept+time #長さ1738
+test = space+intercept+time #長さ696
 
 
-test2 = data.frame(east = coop[, 1], north = coop[, 2], #1518
+# coopは609, testは696でデータ数が合わないためエラーが出る
+test2 = data.frame(east = coop[, 1], north = coop[, 2],
                    value = test, variable = "pred_mean_time1")
 
 
+plot(res$summary.random$s$mean + res$summary.fixed$mean[1] +
+       res$summary.random$time$mean[1])
+
+field.proj = inla.mesh.project(proj, res$summary.random$s$mean + res$summary.fixed$mean[1] +
+                                 res$summary.random$time$mean[1]) #100*100の行列．多分解像度に依存して行列の大きさが変わる
+plot(field.proj)
+t = list(x = proj$x, y = proj$y, z = field.proj)
+
+image.plot(list(x = proj$x, y = proj$y, z = field.proj),
+           xlim = xlim, ylim = ylim) # image.plotはRのデフォルト関数．ggplot2のgeom_tile()のようなもの．
+
+
+# 推定値の緯度経度情報を引っ張り出す with 解像度
+proj = inla.mesh.projector(mesh, xlim = xlim,
+                           ylim = ylim, dims=c(100, 100))
+# 推定値を引っ張り出し，選択した解像度に変換する
+field.proj = inla.mesh.project(proj, res$summary.random$s$mean + res$summary.fixed$mean[1] +
+                                 res$summary.random$time$mean[1]) #100*100の行列．
+
+# image.plot(list(x = proj$x, y = proj$y, z = field.proj))
+z = data.frame(field.proj) 
+# colnames(z) = proj$x
+# z$y = proj$y
+# z2 = z %>% gather(key = lon, value = prob, 1:(ncol(z)-1)) %>% dplyr::rename(lat = y) %>% mutate(lon = as.numeric(str_sub(lon, 1, 6)))
+colnames(z) = proj$y
+z$x = proj$x
+z2 = z %>% gather(key = lat, value = prob, 1:(ncol(z)-1)) %>% dplyr::rename(lon = x) %>% mutate(lat = as.numeric(str_sub(lat, 1, 6)))
+summary(z2)
+
+z3 = z2 %>% mutate(lon = lon+0.1, lat = lat+0.1)
+
+map = ggplot() + coord_fixed() + xlab("Longitude") + ylab("Latitude")
+world_map = map_data("world")
+region2 = subset(world_map, world_map$region == region)
+local_map = map + geom_polygon(data = region2, aes(x = long, y = lat, group = group), colour = "black", fill = "black") + coord_map(xlim = c(min(z2$lon), max(z2$lon)), ylim = c(min(z2$lat), max(z2$lat)))
+th = theme(panel.grid.major = element_blank(),
+           panel.grid.minor = element_blank(),
+           axis.text.x = element_text(size = rel(1)),
+           axis.text.y = element_text(size = rel(1)),
+           axis.title.x = element_text(size = rel(1)),
+           axis.title.y = element_text(size = rel(1)),
+           legend.title = element_text(size = 10))
+p = geom_point(data = z2 %>% na.omit() %>% filter(prob > log(0.3/0.7)) , aes(x = lon, y = lat, colour = prob), shape = 16, size = 1)
+# p = geom_point(data = same %>% filter(kg > 10000), aes(x = lon, y = lat, colour = kg), shape = 16, size = 1)
+c = scale_colour_gradientn(colours = c("blue", "cyan", "green", "yellow", "orange", "red", "darkred"))
+labs = labs(x = "Longitude", y = "Latitude", colour = "Logit \n (encounter probability)")
+# f = facet_wrap(~ year, ncol = 8)
+
+fig = local_map+theme_bw()+th+p+c+labs
+ggsave(filename = "map_same.pdf", plot = fig, units = "in", width = 11.69, height = 8.27)
+
+x = matrix(1:12, ncol = 3)
+image.plot(x)
