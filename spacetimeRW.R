@@ -573,12 +573,12 @@ jap_cog <- jap[jap$lat > 35 & jap$lat < 45 & jap$long > 130 & jap$long < 145, ]
 pol = geom_polygon(data = jap_cog, aes(x=long, y=lat, group=group), colour="black", fill="black")
 c_map = coord_map(xlim = c(134.5, 143), ylim = c(36.5, 43))
 
-g = ggplot(est %>% na.omit() %>% filter(prob > log(0.3/0.7), time == "1972_1"), aes(x = lon, y = lat, fill = prob))
+g = ggplot(est %>% na.omit() %>% filter(prob > log(0.3/0.7)), aes(x = lon, y = lat, fill = prob))
 # r = geom_raster()
 t = geom_tile()
 # v = scale_fill_viridis(na.value = "transparent")
 c = coord_fixed(ratio = 1)
-f = facet_wrap(~ time)
+f = facet_wrap(~ time, ncol = 8)
 labs = labs(x = "Longitude", y = "Latitude", colour = "Logit \n (encounter probability)")
 th = theme(panel.grid.major = element_blank(),
            panel.grid.minor = element_blank(),
