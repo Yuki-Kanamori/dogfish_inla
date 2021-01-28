@@ -53,7 +53,8 @@ times = data.frame(year = rep(min(temp$year):max(temp$year)), month = rep(unique
 times = times %>% mutate(time = rep(1:nrow(times)))
 
 temp = left_join(temp, times, by = c("year", "month"))
-temp = temp %>% filter(lon < 145) %>% filter(lat < 42)
+# temp = temp %>% filter(lon < 145) %>% filter(lat < 42)
+temp = temp %>% filter(lon < 143) %>% filter(lat < 42) %>% filter(lon > 135) %>% filter(lat > 37)
 summary(temp)
 catch = (temp$kg > 0) + 0 #バイナリーデータに変換
 summary(temp)
@@ -121,6 +122,12 @@ summary(map.sp)
 pl.sel <- SpatialPolygons(list(Polygons(list(Polygon(
   cbind(c(128, 132, 138, 144, 144, 144), # x-axis
         c(34,  39,  43,  43,  38,  34)), # y-axis
+  FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
+
+### 小さくした時
+pl.sel <- SpatialPolygons(list(Polygons(list(Polygon(
+  cbind(c(135, 138, 139, 139, 143, 143, 142), # x-axis
+        c(37,  38.5,  40.5, 43,  43,  39,  37)), # y-axis
   FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
 
 # ### 北海道を除去しなかった場合
@@ -234,6 +241,12 @@ summary(map.sp)
 pl.sel2 <- SpatialPolygons(list(Polygons(list(Polygon(
   cbind(c(128, 132, 138, 144, 144, 144), # x-axis 
         c(34,  39,  43,  43,  38,  34)), # y-axis
+  FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
+
+### 小さくした時
+pl.sel2 <- SpatialPolygons(list(Polygons(list(Polygon(
+  cbind(c(135, 138, 139, 139, 143, 143, 142), # x-axis
+        c(37,  38.5,  40.5, 43,  43,  39,  37)), # y-axis
   FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
 
 # ### 北海道を除去しなかった場合
@@ -384,8 +397,10 @@ g+p+pol+theme_bw()+labs(x = "", y = "", title = "Jan. 1972-1981", colour = "Logi
 local.plot.field <- function(field, ...){
   # xlim = c(127, 145)
   # ylim = c(33, 43)
-  xlim = c(127, 152)
-  ylim = c(33, 47)
+  # xlim = c(127, 152)
+  # ylim = c(33, 47)
+  xlim = c(135, 143)
+  ylim = c(37, 43)
   proj = inla.mesh.projector(mesh, xlim = xlim,
                              ylim = ylim, dims=c(300, 300))
   field.proj = inla.mesh.project(proj, field)
@@ -403,7 +418,7 @@ for(i in 1:length(unique(temp$time))) {
   local.plot.field(
     res$summary.random$s$mean + res$summary.fixed$mean[1] +
       res$summary.random$time$mean[i],
-    main = paste0(i+1971), zlim = c(-7, 4), asp = 1,
+    main = paste0(i+1971), zlim = c(-9, 4), asp = 1,
     col = book.color.c(100),
     axes = FALSE)
 }
