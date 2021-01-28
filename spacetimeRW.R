@@ -587,4 +587,4 @@ th = theme(panel.grid.major = element_blank(),
            axis.title.x = element_text(size = rel(1)),
            axis.title.y = element_text(size = rel(1)),
            legend.title = element_text(size = 10))
-g+t+c+pol+c_map+theme_bw()+scale_fill_gradientn(colours = c("blue", "cyan", "green", "yellow", "orange", "red", "darkred"))+labs+f
+g+t+c+pol+labs+c_map+theme_bw()+scale_fill_gradientn(colours = c("blue", "cyan", "green", "yellow", "orange", "red", "darkred"))+f
