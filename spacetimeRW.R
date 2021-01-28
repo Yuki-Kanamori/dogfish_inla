@@ -38,12 +38,12 @@ catch = (temp$kg > 0) + 0 #バイナリーデータに変換
 
 
 ### for minimum data
-m1 = read.csv('same1.csv')
+m1 = read.csv('same3.csv')
 summary(m1)
 m1 = m1 %>% select(year, month, lon, lat, kg)
 
 # 予備解析のためデータを小さくする
-m1 = m1 %>% filter(year < 1975)
+m1 = m1 %>% filter(year < 1977)
 summary(m1)
 
 temp = m1
@@ -68,7 +68,7 @@ for(i in 1:12){
 }
 
 summary(m1)
-temp = m1 %>% dplyr::filter(year == 1990)
+temp = m1 %>% dplyr::filter(year < 1975)
 summary(temp$year)
 
 # make time series
@@ -406,7 +406,7 @@ local.plot.field <- function(field, ...){
   field.proj = inla.mesh.project(proj, field)
   image.plot(list(x = proj$x, y = proj$y, z = field.proj),
              xlim = xlim, ylim = ylim, ...)
-  #plot(poly.barrier, add = TRUE, col = 'grey')
+  plot(poly.barrier, add = TRUE, col = 'grey')
 }
 
 
@@ -540,3 +540,51 @@ th = theme(panel.grid.major = element_blank(),
            legend.title = element_text(size = 10))
 g+t+c+pol+c_map+theme_bw()+scale_fill_gradientn(colours = c("blue", "cyan", "green", "yellow", "orange", "red", "darkred"))+labs
 
+
+# get estimates -------------------------------------------------
+reso = 100
+xlim = c(135, 143)
+ylim = c(37, 43)
+est = NULL
+for(i in 1:length(unique(temp$time))){
+  # 推定値の緯度経度情報を引っ張り出す with 解像度
+  proj = inla.mesh.projector(mesh, xlim = xlim,
+                             ylim = ylim, dims=c(reso, reso))
+  # 推定値を引っ張り出し，選択した解像度に変換する
+  field.proj = inla.mesh.project(proj, res$summary.random$s$mean + res$summary.fixed$mean[1] +
+                                   res$summary.random$time$mean[i]) #100*100の行列．
+  
+  z = data.frame(field.proj) 
+  colnames(z) = proj$y
+  z$x = proj$x
+  z2 = z %>% gather(key = lat, value = prob, 1:(ncol(z)-1)) %>% dplyr::rename(lon = x) %>% 
+    mutate(lat = as.numeric(str_sub(lat, 1, 6)), time = paste0(times[i, "year"], "_", times[i, "month"]))
+  
+  est = rbind(est, z2)
+}
+
+require(ggplot2)
+summary(est)
+unique(est$time)
+# with map
+world_map <- map_data("world")
+jap <- subset(world_map, world_map$region == "Japan")
+jap_cog <- jap[jap$lat > 35 & jap$lat < 45 & jap$long > 130 & jap$long < 145, ]
+pol = geom_polygon(data = jap_cog, aes(x=long, y=lat, group=group), colour="black", fill="black")
+c_map = coord_map(xlim = c(134.5, 143), ylim = c(36.5, 43))
+
+g = ggplot(est %>% na.omit() %>% filter(prob > log(0.3/0.7), time == "1972_1"), aes(x = lon, y = lat, fill = prob))
+# r = geom_raster()
+t = geom_tile()
+# v = scale_fill_viridis(na.value = "transparent")
+c = coord_fixed(ratio = 1)
+f = facet_wrap(~ time)
+labs = labs(x = "Longitude", y = "Latitude", colour = "Logit \n (encounter probability)")
+th = theme(panel.grid.major = element_blank(),
+           panel.grid.minor = element_blank(),
+           axis.text.x = element_text(size = rel(1)),
+           axis.text.y = element_text(size = rel(1)),
+           axis.title.x = element_text(size = rel(1)),
+           axis.title.y = element_text(size = rel(1)),
+           legend.title = element_text(size = 10))
+g+t+c+pol+c_map+theme_bw()+scale_fill_gradientn(colours = c("blue", "cyan", "green", "yellow", "orange", "red", "darkred"))+labs+f
