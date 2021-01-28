@@ -513,5 +513,25 @@ labs = labs(x = "Longitude", y = "Latitude", colour = "Logit \n (encounter proba
 fig = local_map+theme_bw()+th+p+c+labs
 ggsave(filename = "map_same.pdf", plot = fig, units = "in", width = 11.69, height = 8.27)
 
-x = matrix(1:12, ncol = 3)
-image.plot(x)
+
+
+# geom_tile() ---------------------------------------------------
+require(ggplot2)
+summary(z2)
+# with map
+world_map <- map_data("world")
+jap <- subset(world_map, world_map$region == "Japan")
+jap_cog <- jap[jap$lat > 35 & jap$lat < 45 & jap$long > 130 & jap$long < 145, ]
+pol = geom_polygon(data = jap_cog, aes(x=long, y=lat, group=group), colour="black", fill="black")
+c_map = coord_map(xlim = c(134.5, 143), ylim = c(36.5, 43))
+
+g = ggplot(z2 %>% na.omit() %>% filter(prob > log(0.3/0.7)), aes(x = lon, y = lat, fill = prob))
+# r = geom_raster()
+t = geom_tile()
+# v = scale_fill_viridis(na.value = "transparent")
+c = coord_fixed(ratio = 1)
+labs = labs(x = "Longitude", y = "Latitude", colour = "Logit \n (encounter probability)")
+g+t+c+pol+c_map+labs+theme_bw()
+
+
+p+c+pol+c_map+labs+theme_bw()+th
