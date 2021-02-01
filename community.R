@@ -147,7 +147,7 @@ ggsave(filename = "map_ikarui_500.pdf", plot = fig, units = "in", width = 11.69,
 
 
 # -------------------------------------------------------------------------
-# ikarui ------------------------------------------------------------------
+# madara ------------------------------------------------------------------
 # -------------------------------------------------------------------------
 
 # JS2 ------------------------------------------------------------
@@ -161,7 +161,7 @@ js = NULL
 for(i in 1:length(files)){
   data = read.csv(paste0(files[i]), fileEncoding = "CP932")
   
-  data2 = data %>% select(CatchDate, Effort_tow, Ikarui, Latitude, Longitude) %>% mutate(sp = "Ikarui") %>% dplyr::rename(kg = Ikarui)
+  data2 = data %>% select(CatchDate, Effort_tow, Madara, Latitude, Longitude) %>% mutate(sp = "Madara") %>% dplyr::rename(kg = Madara)
   kg = data2$kg
   kg[is.na(kg)] = 0
   data2$kg = kg
@@ -180,4 +180,51 @@ dir_po = "/Users/Yuki/Dropbox/same/PO"
 setwd(dir_po)
 path = dir_po
 files = list.files(path)
+
+po = NULL
+for(i in 1:length(files)){
+  data = read.csv(paste0(files[i]), fileEncoding = "CP932")
+  
+  data2 = data %>% select(CatchDate, Effort_tow, Madara, Latitude, Longitude) %>% mutate(sp = "Madara") %>% dplyr::rename(kg = Madara)
+  kg = data2$kg
+  kg[is.na(kg)] = 0
+  data2$kg = kg
+  
+  po = rbind(po, data2)
+}
+summary(po)
+
+po2 = po %>% mutate(year = as.numeric(str_sub(CatchDate, 1, 4)), month = as.numeric(str_sub(CatchDate, 5, 6)), day = as.numeric(str_sub(CatchDate, 7, 8)))
+summary(po2)
+unique(po2$sp)
+
+
+madara = rbind(js2, po2) %>% dplyr::rename(lon = Longitude, lat = Latitude)
+summary(madara)
+
+setwd(dir1)
+write.csv(madara, "madara.csv")
+
+summary(madara %>% filter(kg > 0))
+
+map = ggplot() + coord_fixed() + xlab("Longitude") + ylab("Latitude")
+world_map = map_data("world")
+region2 = subset(world_map, world_map$region == region)
+local_map = map + geom_polygon(data = region2, aes(x = long, y = lat, group = group), colour = "black", fill = "white") + coord_map(xlim = c(min(madara$lon)-0.2, max(madara$lon)+0.2), ylim = c(min(madara$lat)-0.2, max(madara$lat)+0.2))
+th = theme(panel.grid.major = element_blank(),
+           panel.grid.minor = element_blank(),
+           axis.text.x = element_text(size = rel(1.5)),
+           axis.text.y = element_text(size = rel(1.5)),
+           axis.title.x = element_text(size = rel(1.5)),
+           axis.title.y = element_text(size = rel(1.5)),
+           legend.title = element_text(size = 13))
+p = geom_point(data = madara %>% filter(kg > 400), aes(x = lon, y = lat, colour = kg), shape = 16, size = 1)
+# p = geom_point(data = same %>% filter(kg > 10000), aes(x = lon, y = lat, colour = kg), shape = 16, size = 1)
+c = scale_colour_gradientn(colours = c("black", "blue", "cyan", "green", "yellow", "orange", "red", "darkred"))
+labs = labs(x = "Longitude", y = "Latitude", colour = "kg")
+# f = facet_wrap(~ year, ncol = 8)
+
+fig = local_map+theme_bw()+th+p+c+labs
+ggsave(filename = "map_madara.pdf", plot = fig, units = "in", width = 11.69, height = 8.27)
+
 
