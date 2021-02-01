@@ -289,8 +289,8 @@ for(i in month){
   fig = g+t+c+pol+labs+c_map+theme_bw()+scale_fill_gradientn(colours = c("blue", "cyan", "green", "yellow", "orange", "red", "darkred"))+f
   
   setwd(dir1)
-  ggsave(filename = paste0("temp", m, ".pdf"), plot = fig, units = "in", width = 11.69, height = 8.27)
-  ggsave(filename = paste0("temp", m, ".png"), plot = fig, units = "in", width = 11.69, height = 8.27)
+  ggsave(filename = paste0("temp_madara", m, ".pdf"), plot = fig, units = "in", width = 11.69, height = 8.27)
+  ggsave(filename = paste0("temp_madara", m, ".png"), plot = fig, units = "in", width = 11.69, height = 8.27)
   
   
 }
