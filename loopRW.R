@@ -231,6 +231,7 @@ for(m in month){
   # formula -------------------------------------------------------
   # ---------------------------------------------------------------
   form.barrier = y ~ 0 + intercept + f(s, model = barrier.model) + f(time, model = "rw1", scale.model = TRUE)
+  form.barrier2 = y ~ 0 + intercept + f(s, model = barrier.model) + f(time, model = "rw2", scale.model = TRUE)
   
   
   # ---------------------------------------------------------------
@@ -241,7 +242,13 @@ for(m in month){
              family = 'binomial', 
              control.inla = list(int.strategy = "eb"),
              control.compute = list(waic = TRUE, dic = TRUE))
-  
+  res2 = inla(form.barrier2, data = inla.stack.data(joint.stk),
+             control.predictor = list(A = inla.stack.A(joint.stk)),
+             family = 'binomial', 
+             control.inla = list(int.strategy = "eb"),
+             control.compute = list(waic = TRUE, dic = TRUE))
+  res$waic$waic; res$dic$dic #84390; 84394
+  res2$waic$waic; res2$dic$dic #84888; 84891
   
   reso = 100
   xlim = c(135, 143)
