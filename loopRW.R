@@ -71,7 +71,7 @@ for(m in month){
   
   
   # make a polygon ------------------------------------------------------------
-
+  
   ### 小さくした時
   pl.sel <- SpatialPolygons(list(Polygons(list(Polygon(
     cbind(c(135, 138, 139, 139, 143, 143, 142), # x-axis
@@ -231,7 +231,6 @@ for(m in month){
   # formula -------------------------------------------------------
   # ---------------------------------------------------------------
   form.barrier = y ~ 0 + intercept + f(s, model = barrier.model) + f(time, model = "rw1", scale.model = TRUE)
-  form.barrier2 = y ~ 0 + intercept + f(s, model = barrier.model) + f(time, model = "rw2", scale.model = TRUE)
   
   
   # ---------------------------------------------------------------
@@ -242,13 +241,7 @@ for(m in month){
              family = 'binomial', 
              control.inla = list(int.strategy = "eb"),
              control.compute = list(waic = TRUE, dic = TRUE))
-  res2 = inla(form.barrier2, data = inla.stack.data(joint.stk),
-             control.predictor = list(A = inla.stack.A(joint.stk)),
-             family = 'binomial', 
-             control.inla = list(int.strategy = "eb"),
-             control.compute = list(waic = TRUE, dic = TRUE))
-  res$waic$waic; res$dic$dic #84390; 84394
-  res2$waic$waic; res2$dic$dic #84888; 84891
+  
   
   reso = 100
   xlim = c(135, 143)
@@ -314,6 +307,7 @@ for(m in month){
 
 require(gganimate)
 require(ggplot2)
+require(lubridate)
 
 dir1 = "/Users/Yuki/Dropbox/same"
 setwd(dir1)
@@ -341,7 +335,7 @@ pol = geom_polygon(data = jap_cog, aes(x=long, y=lat, group=group), colour="blac
 c_map = coord_map(xlim = c(134.5, 143), ylim = c(36.5, 43))
 
 # ggplot2
-g = ggplot(df2 %>% na.omit() %>% filter(prob > log(0.3/0.7)), aes(x = lon, y = lat, fill = prob))
+g = ggplot(df2 %>% na.omit() %>% filter(prob > log(0.3/0.7), year == 1972), aes(x = lon, y = lat, fill = prob))
 t = geom_tile()
 c = coord_fixed(ratio = 1)
 labs = labs(x = "Longitude", y = "Latitude", fill = "Logit \n (encounter probability)")
@@ -355,9 +349,15 @@ th = theme(panel.grid.major = element_blank(),
            legend.title = element_text(size = 10))
 fig = g+t+c+pol+labs+c_map+theme_bw()+scale_fill_gradientn(colours = c("blue", "cyan", "green", "yellow", "orange", "red", "darkred"))+transition_time(time)
 
-animate(fig, fps = 20)
+fig = g+t+c+pol+labs+c_map+theme_bw()+scale_fill_gradientn(colours = c("blue", "cyan", "green", "yellow", "orange", "red", "darkred"))+transition_reveal(time)+ease_aes("cubic-in-out")
+
+anim = animate(fig, fps = 20)
 # fps: The framerate of the animation in frames/sec (default 10)
 
+gganimate(anim)
+
+# animate(fig, nframes = 24, renderer = gifski_renderer("year1972.gif"))
+anim_save(anim, filenane = "year1972.gif")
 
 
 # 一枚づつgifでプロット
