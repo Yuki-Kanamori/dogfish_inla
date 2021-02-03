@@ -297,3 +297,62 @@ for(m in month){
   ggsave(filename = paste0("temp", m, ".png"), plot = fig, units = "in", width = 11.69, height = 8.27)
   
 }
+
+
+
+
+# animation -----------------------------------------------------
+# require(devtools)
+# devtools::install_github("dgrtwo/gganimate")
+
+require(gganimate)
+require(ggplot2)
+
+dir1 = "/Users/Yuki/Dropbox/same"
+setwd(dir1)
+
+month = c(1,2,3,4,5,6,9,10,11,12)
+df = NULL
+for(i in month){
+  data = read.csv(paste0("est", i, ".csv"))
+  df = rbind(df, data)
+}
+summary(df)
+unique(df$time)
+df = df %>% mutate(year = as.numeric(str_sub(time, 1, 4)), month = as.numeric(str_sub(time, 6, 7))) %>% select(-X, -time)
+
+times = data.frame(year = rep(min(df$year):max(df$year), each = length(unique(df$month))), month = rep(unique(df$month)))
+times = times %>% mutate(time = rep(1:nrow(times)))
+
+df2 = left_join(df, times, by = c("year", "month"))
+
+# map inf.
+world_map <- map_data("world")
+jap <- subset(world_map, world_map$region == "Japan")
+jap_cog <- jap[jap$lat > 35 & jap$lat < 45 & jap$long > 130 & jap$long < 145, ]
+pol = geom_polygon(data = jap_cog, aes(x=long, y=lat, group=group), colour="black", fill="black")
+c_map = coord_map(xlim = c(134.5, 143), ylim = c(36.5, 43))
+
+# ggplot2
+g = ggplot(df2 %>% na.omit() %>% filter(prob > log(0.3/0.7)), aes(x = lon, y = lat, fill = prob))
+t = geom_tile()
+c = coord_fixed(ratio = 1)
+labs = labs(x = "Longitude", y = "Latitude", fill = "Logit \n (encounter probability)")
+# , title = "[{as.integer(frame_time)}] : {frame_time}"
+th = theme(panel.grid.major = element_blank(),
+           panel.grid.minor = element_blank(),
+           axis.text.x = element_text(size = rel(1)),
+           axis.text.y = element_text(size = rel(1)),
+           axis.title.x = element_text(size = rel(1)),
+           axis.title.y = element_text(size = rel(1)),
+           legend.title = element_text(size = 10))
+fig = g+t+c+pol+labs+c_map+theme_bw()+scale_fill_gradientn(colours = c("blue", "cyan", "green", "yellow", "orange", "red", "darkred"))+transition_time(time)
+
+
+# 一枚づつgifでプロット
+gg_animate(fig)
+
+
+
+
+
