@@ -8,15 +8,15 @@ require(ggplot2)
 dir1 = "/Users/Yuki/Dropbox/migration"
 setwd(dir1)
 
-month = c(1,2,3,4,5,6,9,10,11,12)
+month = c(2,3,4,5,6,9,10,11,12)
 
-for(i in month){
+for(m in month){
   m1 = read.csv("madara.csv")
   summary(m1)
   m1 = m1 %>% select(year, month, lon, lat, kg)
   
   # 予備解析のためデータを小さくする
-  m1 = m1 %>% filter(year < 2012, month == 1)
+  m1 = m1 %>% filter(year < 2012, month == m)
   summary(m1)
   
   temp = m1
@@ -243,13 +243,13 @@ for(i in month){
   xlim = c(135, 143)
   ylim = c(37, 43)
   est = NULL
-  for(i in 1:length(unique(temp$time))){
+  for(j in 1:length(unique(temp$time))){
     # 推定値の緯度経度情報を引っ張り出す with 解像度
     proj = inla.mesh.projector(mesh, xlim = xlim,
                                ylim = ylim, dims=c(reso, reso))
     # 推定値を引っ張り出し，選択した解像度に変換する
     field.proj = inla.mesh.project(proj, res$summary.random$s$mean + res$summary.fixed$mean[1] +
-                                     res$summary.random$time$mean[i]) #100*100の行列．
+                                     res$summary.random$time$mean[j]) #100*100の行列．
     
     z = data.frame(field.proj) 
     colnames(z) = proj$y
