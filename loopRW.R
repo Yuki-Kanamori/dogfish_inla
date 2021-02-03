@@ -348,6 +348,10 @@ th = theme(panel.grid.major = element_blank(),
            legend.title = element_text(size = 10))
 fig = g+t+c+pol+labs+c_map+theme_bw()+scale_fill_gradientn(colours = c("blue", "cyan", "green", "yellow", "orange", "red", "darkred"))+transition_time(time)
 
+animate(fig, fps = 20)
+# fps: The framerate of the animation in frames/sec (default 10)
+
+
 
 # 一枚づつgifでプロット
 gg_animate(fig)
