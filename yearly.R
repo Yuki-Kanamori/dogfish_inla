@@ -294,3 +294,20 @@ fig = g+t+c+pol+labs+c_map+theme_bw()+scale_fill_gradientn(colours = c("blue", "
 setwd(dir1)
 ggsave(filename = paste0("temp", m, ".pdf"), plot = fig, units = "in", width = 11.69, height = 8.27)
 ggsave(filename = paste0("temp", m, ".png"), plot = fig, units = "in", width = 11.69, height = 8.27)
+
+
+
+# all data ---------------------------------------------------------------------
+dir1 = "/Users/Yuki/Dropbox/same"
+setwd(dir1)
+
+t1 = read.csv("est_year72-81.csv")
+t2 = read.csv("est_year82-91.csv")
+t3 = read.csv("est_year92-01.csv") # ない
+t4 = read.csv("est_year02-11.csv")
+
+summary(t1)
+summary(t2)
+summary(t3)
+summary(t4)
+
