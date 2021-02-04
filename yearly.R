@@ -22,7 +22,7 @@ summary(temp)
 times = data.frame(year = rep(min(temp$year):max(temp$year), each = length(unique(temp$month))), month = rep(1:max(temp$month)))
 times = times %>% filter(month != 7) %>% filter(month != 8) %>% filter(year != 2012)
 # times = times %>% mutate(time = rep(1:nrow(times)))
-times = times %>% mutate(time = year-1971)
+times = times %>% mutate(time = year-1981)
 
 # combine
 temp = temp %>% select(year, month, lon, lat, kg) %>% filter(month != 7) %>% filter(month != 8) %>% filter(year != 2012)
@@ -30,7 +30,7 @@ unique(temp$month)
 temp = left_join(temp, times, by = c("year", "month"))
 summary(temp)
 
-temp = temp %>% filter(lon < 143) %>% filter(lat < 42) %>% filter(lon > 135) %>% filter(lat > 37)
+temp = temp %>% filter(lon < 143) %>% filter(lat < 42) %>% filter(lon > 135) %>% filter(lat > 37) %>% filter(year < 1992) %>% filter(year > 1981)
 summary(temp)
 catch = (temp$kg > 0) + 0 #バイナリーデータに変換
 
@@ -239,7 +239,8 @@ res = inla(form.barrier, data = inla.stack.data(joint.stk),
            control.predictor = list(A = inla.stack.A(joint.stk)),
            family = 'binomial', 
            control.inla = list(int.strategy = "eb"),
-           control.compute = list(waic = TRUE, dic = TRUE))
+           control.compute = list(waic = TRUE, dic = TRUE),
+           verbose=TRUE)
 
 reso = 100
 xlim = c(135, 143)
@@ -257,13 +258,13 @@ for(i in 1:length(unique(temp$time))){
   colnames(z) = proj$y
   z$x = proj$x
   z2 = z %>% gather(key = lat, value = prob, 1:(ncol(z)-1)) %>% dplyr::rename(lon = x) %>% 
-    mutate(lat = as.numeric(str_sub(lat, 1, 6)), time = paste0(times[i, "year"], "_", times[i, "month"]))
+    mutate(lat = as.numeric(str_sub(lat, 1, 6)), time = as.numeric(paste0(1981+i)))
   
   est = rbind(est, z2)
 }
-
+summary(est)
 setwd(dir1)
-write.csv(est, paste0("est", m, ".csv"))
+write.csv(est, paste0("est_year82-91", ".csv"))
 
 summary(est)
 unique(est$time)
@@ -274,7 +275,7 @@ jap_cog <- jap[jap$lat > 35 & jap$lat < 45 & jap$long > 130 & jap$long < 145, ]
 pol = geom_polygon(data = jap_cog, aes(x=long, y=lat, group=group), colour="black", fill="black")
 c_map = coord_map(xlim = c(134.5, 143), ylim = c(36.5, 43))
 
-g = ggplot(est %>% na.omit() %>% filter(prob > log(0.3/0.7)), aes(x = lon, y = lat, fill = prob))
+g = ggplot(est %>% na.omit() %>% filter(prob > log(0.5/0.5)), aes(x = lon, y = lat, fill = prob))
 # r = geom_raster()
 t = geom_tile()
 # v = scale_fill_viridis(na.value = "transparent")
