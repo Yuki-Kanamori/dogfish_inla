@@ -129,16 +129,84 @@ A <- inla.spde.make.A(mesh = mesh,
 As <- inla.spde.make.A(mesh = mesh,
                       loc = loc) 
 
+
+# prediction ----------------------------------------------------
+# Select region 
+map <- map("world", "Japan", fill = TRUE,
+           col = "transparent", plot = TRUE)
+IDs <- sapply(strsplit(map$names, ":"), function(x) x[1])
+map.sp <- map2SpatialPolygons(
+  map, IDs = IDs,
+  proj4string = CRS("+proj=longlat +datum=WGS84"))
+summary(map.sp)
+
+
+# ## lat < 42で北海道を除去した場合
+# pl.sel2 <- SpatialPolygons(list(Polygons(list(Polygon(
+#   cbind(c(128, 132, 138, 144, 144, 144), # x-axis 
+#         c(34,  39,  43,  43,  38,  34)), # y-axis
+#   FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
+
+### 小さくした時
+pl.sel2 <- SpatialPolygons(list(Polygons(list(Polygon(
+  cbind(c(135, 138, 139, 139, 143, 143, 142), # x-axis
+        c(37,  38.5,  40.5, 43,  43,  39,  37)), # y-axis
+  FALSE)), '0')), proj4string = CRS(proj4string(map.sp))) #緯度経度データ
+
+summary(pl.sel2)
+poly.water2 <- gDifference(pl.sel2, map.sp)
+plot(pl.sel2)
+plot(map.sp)
+plot(poly.water2)
+summary(poly.water2) #xmax = 144
+
+tok_bor = poly.water2@polygons[[1]]@Polygons[[1]]@coords
+summary(tok_bor) #xmax = 141 ここが変！=>直った？
+
+bb_tok = poly.water2@bbox
+summary(bb_tok)
+x = seq(bb_tok[1, "min"] - 5, bb_tok[1, "max"] + 5, length.out = 100)
+y = seq(bb_tok[2, "min"] - 5, bb_tok[2, "max"] + 5, length.out = 100)
+coop = as.matrix(expand.grid(x, y))
+summary(coop)
+ind = point.in.polygon(coop[, 1], coop[, 2],
+                       tok_bor[, 1], tok_bor[, 2])
+coop = coop[which(ind == 1), ] #1516
+plot(coop, asp = 1)
+
+# check here
+loc2 = NULL
+for(i in 1:length(unique(temp$time))){
+  loc2 = rbind(loc2, coop)
+}
+
+Ap = inla.spde.make.A(mesh = mesh, loc = loc2, group = temp$time) #error
+dim(Ap) #1518, 1738
+Aps = inla.spde.make.A(mesh = mesh, loc = loc2)
+
+
+# stack ---------------------------------------------------------
 stk = inla.stack(
   data = list(y = catch),
-  A = list(A, As, 1),
-  effects = list(i = iset, s = spde$n.spde, intercept = rep(1, length(catch))),
+  A = list(A, As, 1, 1),
+  effects = list(i = iset, s = spde$n.spde, intercept = rep(1, length(catch)), time = temp$time),
   tag = 'est'
 )
 
+na = rep(NA, nrow(coop)*length(unique(temp$time)))
+stk.pred = inla.stack(
+  data = list(y = na),
+  A = list(Ap, Aps, 1, 1),
+  effects = list(i = iset, s = 1:mesh$n, intercept = rep(1, nrow(coop)*length(unique(temp$time))), time = rep(1:length(unique(temp$time)), each = nrow(coop))),
+  tag = 'pred'
+)
+joint.stk = inla.stack(stk, stk.pred)
+
+
+
 h.spec <- list(theta = list(prior = 'pccor1', param = c(0, 0.9)))
-formulae <- y ~ 0 + intercept + f(i, model = spde, group = i.group, 
-                          control.group = list(model = 'rw1', hyper = h.spec)) + f(s, model = spde, control.group = list(model = 'rw1', hyper = h.spec))
+
+formulae <- y ~ 0 + intercept + f(time, model = "rw1", scale.model = TRUE) + f(i, model = spde, group = i.group, control.group = list(model = 'rw1', hyper = h.spec)) + f(s, model = spde)
 
 # PC prior on the autoreg. param.
 prec.prior <- list(prior = 'pc.prec', param = c(1, 0.01))
