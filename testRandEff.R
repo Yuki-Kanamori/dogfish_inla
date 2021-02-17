@@ -126,17 +126,19 @@ iset <- inla.spde.make.index('i', n.spde = spde$n.spde,
 ## ----apred---------------------------------------------------------------
 A <- inla.spde.make.A(mesh = mesh,
                       loc = loc, group = temp$time) 
+As <- inla.spde.make.A(mesh = mesh,
+                      loc = loc) 
 
 stk = inla.stack(
   data = list(y = catch),
-  A = list(A, 1),
-  effects = list(i = iset, intercept = rep(1, length(catch))),
+  A = list(A, As, 1),
+  effects = list(i = iset, s = spde$n.spde, intercept = rep(1, length(catch))),
   tag = 'est'
 )
 
 h.spec <- list(theta = list(prior = 'pccor1', param = c(0, 0.9)))
 formulae <- y ~ 0 + intercept + f(i, model = spde, group = i.group, 
-                          control.group = list(model = 'rw1', hyper = h.spec)) 
+                          control.group = list(model = 'rw1', hyper = h.spec)) + f(s, model = spde, control.group = list(model = 'rw1', hyper = h.spec))
 
 # PC prior on the autoreg. param.
 prec.prior <- list(prior = 'pc.prec', param = c(1, 0.01))
